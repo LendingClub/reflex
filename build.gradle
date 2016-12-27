@@ -1,0 +1,124 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: "jacoco"
+
+group 'org.lendingclub'
+version = "1.0.0"
+configurations {
+	//all*.exclude group: 'org.codehaus.groovy', module: 'groovy'
+	all*.exclude group: 'log4j'
+	all*.exclude group: 'xml-apis'
+    all*.exclude group: 'commons-logging'
+}
+
+repositories {
+   mavenLocal()
+   mavenCentral()
+   jcenter()
+   
+
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+
+
+	compile "io.reactivex:rxjava:${RXJAVA1_VERSION}"
+    compile "io.reactivex.rxjava2:rxjava:${RXJAVA2_VERSION}"
+	compile "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"
+
+	compile "org.slf4j:slf4j-api:${SLF4J_VERSION}"
+	compile "com.google.guava:guava:20.0"  //  <<-- test scope only!
+	
+	testCompile 'org.assertj:assertj-core:2.2.0'  
+	
+	testCompile "junit:junit:${JUNIT_VERSION}"
+	
+	testCompile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
+	testCompile "org.slf4j:jul-to-slf4j:${SLF4J_VERSION}"
+	
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.2.1'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+	
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+	
+	
+}
+
+artifacts {
+        archives sourcesJar, javadocJar
+}
+uploadArchives {
+    repositories {
+        mavenDeployer {
+			
+            name = 'macgyver-bintray'
+
+			if (!project.ext.has('BINRAY_USER')) {
+				project.ext['BINTRAY_USER']=System.getenv("BINTRAY_USER")
+			}
+			if (!project.ext.has('BINTRAY_KEY')) {
+				project.ext['BINTRAY_KEY'] = System.getenv("BINTRAY_KEY")
+			}
+			
+            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/robschoening/io-macgyver/rx-event-bus'){
+                authentication(userName: BINTRAY_USER, password: BINTRAY_KEY)
+			}
+            pom.project {
+				
+				name 'rx-event-bus'
+				description 'Reactive Event Bus'
+				url 'https://github.com/LendingClub/rx-event-bus'
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+						distribution 'repo'
+                    }
+                }
+				scm {
+					connection 'scm:git:git@github.com:LendingClub/rx-event-bus.git'
+					developerConnection 'scm:git:git@github.com:LendingClub/rx-event-bus.git'
+					url 'git@github.com:LendingClub/rx-event-bus.git'
+				}
+            	developers {
+					developer {
+						name 'Rob Schoening'
+						email 'robschoening@gmail.com'
+					}
+				}
+            }
+        }
+    }
+}
+
+
+
+jacocoTestReport {
+    group = "reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+    }
+    //classDirectories = fileTree(dir: 'build/classes/main', include: 'com/thc/**')
+    //sourceDirectories = fileTree(dir: 'scr/java', include: 'com/thc/**')
+    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+}
+
+
