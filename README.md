@@ -83,7 +83,7 @@ Observable.just(n0).flatMap(FlatMapFilters.json(json -> {
 ## AWS Simple Queue Service (SQS) Support
 
 
-SQSAdapter simplifies the task of reading from an SQS queue and processing it with Rx goodness.
+[SQSAdapter](src/main/java/org/lendingclub/rx/aws/sqs/SQSAdapter.java) simplifies the task of reading from an SQS queue and processing it with Rx goodness.
 
 ```java
 AmazonSQSClient client = new AmazonSQSClient(new DefaultAWSCredentialsProviderChain());
