@@ -15,15 +15,14 @@ EventBusAdapter provides a simple Observable binding to Guava's [EventBus](https
 The following is a simple hello-world example:
 
 ```java
-    EventBus eventBus = new EventBus();
+EventBus eventBus = new EventBus();
     
-    Observable<Object> observable = EventBusAdapter.toObservable(eventBus);
+Observable<Object> observable = EventBusAdapter.toObservable(eventBus);
 
-    observable.subscribe(it -> {
-        System.out.println("Hello, "+it);
-    });
-    eventBus.post("world");
-
+observable.subscribe(it -> {
+    System.out.println("Hello, "+it);
+});
+eventBus.post("world");
 ```
 
 As a convenience, it is possible to filter types:
