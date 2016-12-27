@@ -30,7 +30,7 @@ As a convenience, it is possible to filter types:
 
 
 ```java
-    Observable<MyEvent> observable = EventBusAdapter.toObservable(MyEvent.class);
+Observable<MyEvent> observable = EventBusAdapter.toObservable(MyEvent.class);
 ```
 
 ## Bounded Work Queue
@@ -39,24 +39,23 @@ It can be hard to reason with RxJava's threading model.  ```WorkQueueObserver```
 between an observable that acts as the worker.  
 
 ```java
-    WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>();
+WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>();
 
-    queue.getObservable().subscribe(it -> {
-        System.out.println("processing "+it+" in "+Thread.currentThread());
-    });
+queue.getObservable().subscribe(it -> {
+    System.out.println("processing "+it+" in "+Thread.currentThread());
+});
     
-    Observable.range(0, 100).subscribe(queue);
+Observable.range(0, 100).subscribe(queue);
 ```
 
 WorkQueueObserver exposes a number of options availbale on the underlying Executor:
 
 ```java
-    
-    WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>()
-        .withCoreThreadPoolSize(5)
-        .withQueueSize(5000)
-        .withThreadName("my-thread-%d")
-        .withThreadTimeout(30, TimeUnit.SECONDS);
+WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>()
+    .withCoreThreadPoolSize(5)
+    .withQueueSize(5000)
+    .withThreadName("my-thread-%d")
+    .withThreadTimeout(30, TimeUnit.SECONDS);
 ```
 
 ## Convenience Predicates
