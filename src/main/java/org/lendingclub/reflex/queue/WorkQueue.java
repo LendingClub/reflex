@@ -1,4 +1,4 @@
-package org.lendingclub.rx.queue;
+package org.lendingclub.reflex.queue;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -42,7 +42,7 @@ public class WorkQueue<T> implements Observer<T> {
 	LinkedBlockingDeque<Runnable> queue;
 	ThreadPoolExecutor executor;
 	
-	PublishSubject<T> publishSubject = PublishSubject.create();
+	final PublishSubject<T> publishSubject = PublishSubject.create();
 	
 	
 	public WorkQueue() {
@@ -55,30 +55,36 @@ public class WorkQueue<T> implements Observer<T> {
 	}
 	
 	public WorkQueue<T> withQueueSize(int size) {
+		assertNotStarted();
 		this.queueSize = size;
 		return this;
 	}
 	
 	public WorkQueue<T> withCoreThreadPoolSize(int size) {
+		assertNotStarted();
 		this.coreThreadPoolSize = size;
 		this.maxThreadPoolSize = Math.max(maxThreadPoolSize, this.coreThreadPoolSize);
 		return this;
 	}
 	public WorkQueue<T> withRejectedExecutionHandler(RejectedExecutionHandler handler) {
+		assertNotStarted();
 		this.rejectedExecutionHandler = handler;
 		return this;
 	}
 	public WorkQueue<T> withMaxThreadPoolSize(int size) {
+		assertNotStarted();
 		this.coreThreadPoolSize = size;
 		return this;
 	}
 	public WorkQueue<T> withThreadTimeout(int time, TimeUnit timeUnit) {
+		assertNotStarted();
 		this.time = time;
 		this.timeUnit = timeUnit;
 		return this;
 	}
 	
 	public WorkQueue<T> withThreadName(String name) {
+		assertNotStarted();
 		this.name = name;
 		return this;
 	}
@@ -91,18 +97,20 @@ public class WorkQueue<T> implements Observer<T> {
 		if (executor == null) {
 			queue = new LinkedBlockingDeque<>(queueSize);
 			
-			if (maxThreadPoolSize<coreThreadPoolSize) {
-				throw new IllegalArgumentException("maxThreadPoolSize < coreThreadPoolSize");
-			}
+			Preconditions.checkArgument(maxThreadPoolSize>=coreThreadPoolSize,"maxThreadPoolSize < coreThreadPoolSize");
+			
+			logger.info("Starting ThreadPoolExecutor for {}",this);
 			logger.info("coreSize: {}",coreThreadPoolSize);
 			logger.info("maxSize : {}",maxThreadPoolSize);
-			executor= new ThreadPoolExecutor(coreThreadPoolSize,maxThreadPoolSize, time, timeUnit,
+			
+			ThreadPoolExecutor localExecutor= new ThreadPoolExecutor(coreThreadPoolSize,maxThreadPoolSize, time, timeUnit,
 					queue);
-			executor.setThreadFactory(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(name).build());
+			localExecutor.setThreadFactory(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(name).build());
 			
-			executor.setRejectedExecutionHandler(rejectedExecutionHandler);
+			localExecutor.setRejectedExecutionHandler(rejectedExecutionHandler);
 			
-			
+			logger.info("ThreadPoolExecutor started");
+			this.executor = localExecutor;
 		}
 
 	}
@@ -132,14 +140,17 @@ public class WorkQueue<T> implements Observer<T> {
 
 	@Override
 	public void onError(Throwable t) {
-		logger.info("onError()",t);
+		logger.debug("onError()",t);
 
 	}
 
 	@Override
 	public void onComplete() {
-		logger.info("onComplete()");
+		logger.debug("onComplete()");
 
 	}
 
+	private void assertNotStarted() {
+		Preconditions.checkState(executor==null,"start() called already");
+	}
 }

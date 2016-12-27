@@ -1,8 +1,10 @@
-package org.lendingclub.rx.predicate;
+package org.lendingclub.reflex.predicate;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
+import org.lendingclub.reflex.predicate.FlatMapFilters;
+import org.lendingclub.reflex.predicate.Predicates;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

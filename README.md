@@ -1,4 +1,4 @@
-# rx-util
+# reflex
 
 A set of utility classes for working with RxJava 2.x.
 
@@ -9,9 +9,9 @@ A set of utility classes for working with RxJava 2.x.
 
 ## Guava EventBus Obeservable
 
-[EventBusAdapter](src/main/java/org/lendingclub/rx/guava/EventBusAdapter.java) provides a simple Observable binding to Guava's [EventBus](https://github.com/google/guava/wiki/EventBusExplained).
+[EventBusAdapter](src/main/java/org/lendingclub/reflex/guava/EventBusAdapter.java) provides a simple Observable binding to Guava's [EventBus](https://github.com/google/guava/wiki/EventBusExplained).
 
-The following is a simple hello-world example.  [EventBusAdapter](src/main/java/org/lendingclub/rx/guava/EventBusAdapter.java) subscribes to the EventBus and exposes it as an Observable.
+The following is a simple hello-world example.  [EventBusAdapter](src/main/java/org/lendingclub/reflex/guava/EventBusAdapter.java) subscribes to the EventBus and exposes it as an Observable.
 
 ```java
 EventBus eventBus = new EventBus();
@@ -32,8 +32,10 @@ Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.
 
 ## Bounded Work Queue
 
+
 Sometimes it can be hard to reason with the Reactive threading model.  [WorkQueue](src/main/java/org/lendingclub/rx/queue/WorkQueue.java) provides a simple way to put a BlockingQueue/ThreadPoolExecutor 
 between a source Observable and an Observable that acts as the worker.  It may go against the Reactive Manifesto, but it is simple and clear.  With the reactive Schedulers, ```subscribeOn```, and ```observeOn``` it is not always so clear what is happening, so mistakes are easy to make.
+
 
 In the following example, the Observable consisting of the range of values [0..99] is subscribed-to by a work queue the processes the values in sequence in a separate thread:
 
@@ -59,7 +61,7 @@ WorkQueue<Integer> queue = new WorkQueue<Integer>()
 
 ## Convenience Predicates
 
-The [Predicates](src/main/java/org/lendingclub/rx/predicate/Predicates.java) class has a convenience method that applies Jackson's fluent path evaluation as a predicate.
+The [Predicates](src/main/java/org/lendingclub/reflex/predicate/Predicates.java) class has a convenience method that applies Jackson's fluent path evaluation as a predicate.
 
 The following will filter out only Jacckson JsonNode objects that have a ```foo``` attribute with a value of ```bar```:
 
@@ -82,7 +84,7 @@ Observable.just(n0).flatMap(FlatMapFilters.json(json -> {
 ## AWS Simple Queue Service (SQS) Support
 
 
-[SQSAdapter](src/main/java/org/lendingclub/rx/aws/sqs/SQSAdapter.java) simplifies the task of reading from an SQS queue and processing it with Rx goodness.
+[SQSAdapter](src/main/java/org/lendingclub/reflex/aws/sqs/SQSAdapter.java) simplifies the task of reading from an SQS queue and processing it with Rx goodness.
 
 ```java
 AmazonSQSClient client = new AmazonSQSClient(new DefaultAWSCredentialsProviderChain());

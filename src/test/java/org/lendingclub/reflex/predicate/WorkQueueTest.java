@@ -1,11 +1,11 @@
-package org.lendingclub.rx.predicate;
+package org.lendingclub.reflex.predicate;
 
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.lendingclub.rx.queue.WorkQueue;
+import org.lendingclub.reflex.queue.WorkQueue;
 
 import io.reactivex.Observable;
 

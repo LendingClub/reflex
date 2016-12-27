@@ -1,4 +1,4 @@
-package org.lendingclub.rx.aws.sqs;
+package org.lendingclub.reflex.aws.sqs;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +37,7 @@ public class SQSAdapter {
 		}
 	}
 
-	static Logger logger = LoggerFactory.getLogger(SQSAdapterTest.class);
+	static Logger logger = LoggerFactory.getLogger(SQSAdapter.class);
 
 	PublishSubject<SQSMessage> publishSubject = PublishSubject.create();
 	String queueUrl;
@@ -87,7 +87,7 @@ public class SQSAdapter {
 				}
 				return Observable.just(n);
 			} catch (Exception e) {
-				logger.warn("problem",e);
+				logger.warn("problem", e);
 			}
 			return Observable.empty();
 		}

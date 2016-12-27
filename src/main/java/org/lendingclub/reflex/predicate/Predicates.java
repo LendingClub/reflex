@@ -1,4 +1,4 @@
-package org.lendingclub.rx.predicate;
+package org.lendingclub.reflex.predicate;
 
 
 import com.fasterxml.jackson.databind.JsonNode;

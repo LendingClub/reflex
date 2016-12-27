@@ -1,4 +1,4 @@
-package org.lendingclub.rx.guava;
+package org.lendingclub.reflex.guava;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

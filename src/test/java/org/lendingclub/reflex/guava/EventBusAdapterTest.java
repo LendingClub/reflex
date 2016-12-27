@@ -1,4 +1,4 @@
-package org.lendingclub.rx.guava;
+package org.lendingclub.reflex.guava;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -6,10 +6,9 @@ import java.util.concurrent.Executors;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;
-import org.lendingclub.rx.guava.EventBusAdapter;
-
-import org.lendingclub.rx.predicate.Predicates;
-import org.lendingclub.rx.queue.WorkQueue;
+import org.lendingclub.reflex.guava.EventBusAdapter;
+import org.lendingclub.reflex.predicate.Predicates;
+import org.lendingclub.reflex.queue.WorkQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
