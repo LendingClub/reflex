@@ -77,7 +77,7 @@ uploadArchives {
 				project.ext['BINTRAY_KEY'] = System.getenv("BINTRAY_KEY")
 			}
 			
-            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/LendingClub/OSS/reflex'){
+            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/lendingclub/OSS/reflex'){
                 authentication(userName: BINTRAY_USER, password: BINTRAY_KEY)
 			}
             pom.project {

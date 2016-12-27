@@ -1,6 +1,7 @@
 # reflex
 
 [![CircleCI](https://circleci.com/gh/LendingClub/macgyver.svg?style=svg)](https://circleci.com/gh/LendingClub/macgyver)
+[ ![Download](https://api.bintray.com/packages/lendingclub/OSS/reflex/images/download.svg) ](https://bintray.com/lendingclub/OSS/reflex/_latestVersion)
 
 Reflex is a set of utilities for working with [RxJava 2.x](https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0) and [Reactive Streams](http://www.reactive-streams.org/)
 
