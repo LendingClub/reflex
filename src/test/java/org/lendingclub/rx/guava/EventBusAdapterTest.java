@@ -9,7 +9,7 @@ import org.junit.Test;
 import org.lendingclub.rx.guava.EventBusAdapter;
 
 import org.lendingclub.rx.predicate.Predicates;
-import org.lendingclub.rx.queue.WorkQueueObserver;
+import org.lendingclub.rx.queue.WorkQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class EventBusAdapterTest {
 
 		
 		
-		WorkQueueObserver<Object> qs = new WorkQueueObserver<>();
+		WorkQueue<Object> qs = new WorkQueue<>();
 		emitter.getObservable().subscribe(qs);
 		
 		Disposable x = qs.getObservable().subscribe(c-> {
