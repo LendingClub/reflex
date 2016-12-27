@@ -77,14 +77,14 @@ uploadArchives {
 				project.ext['BINTRAY_KEY'] = System.getenv("BINTRAY_KEY")
 			}
 			
-            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/robschoening/io-macgyver/rx-event-bus'){
+            repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/robschoening/reflex/reflex'){
                 authentication(userName: BINTRAY_USER, password: BINTRAY_KEY)
 			}
             pom.project {
 				
-				name 'rx-event-bus'
-				description 'Reactive Event Bus'
-				url 'https://github.com/LendingClub/rx-event-bus'
+				name 'reflex'
+				description 'Tools to support Reactive Streams'
+				url 'https://github.com/LendingClub/reflex'
                 licenses {
                     license {
                         name 'The Apache Software License, Version 2.0'
@@ -93,14 +93,14 @@ uploadArchives {
                     }
                 }
 				scm {
-					connection 'scm:git:git@github.com:LendingClub/rx-event-bus.git'
-					developerConnection 'scm:git:git@github.com:LendingClub/rx-event-bus.git'
-					url 'git@github.com:LendingClub/rx-event-bus.git'
+					connection 'scm:git:git@github.com:LendingClub/reflex.git'
+					developerConnection 'scm:git:git@github.com:LendingClub/reflex.git'
+					url 'git@github.com:LendingClub/reflex.git'
 				}
             	developers {
 					developer {
 						name 'Rob Schoening'
-						email 'robschoening@gmail.com'
+						email 'rschoening@lendingclub.com'
 					}
 				}
             }
