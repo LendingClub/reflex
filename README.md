@@ -12,7 +12,7 @@ A set of utility classes for working with RxJava 2.x.
 
 [EventBusAdapter](src/main/java/org/lendingclub/rx/guava/EventBusAdapter.java) provides a simple Observable binding to Guava's [EventBus](https://github.com/google/guava/wiki/EventBusExplained).
 
-The following is a simple hello-world example.  ```EventBusAdapter``` subscribes to the EventBus and exposes it as an Observable.
+The following is a simple hello-world example.  [EventBusAdapter](src/main/java/org/lendingclub/rx/guava/EventBusAdapter.java) subscribes to the EventBus and exposes it as an Observable.
 
 ```java
 EventBus eventBus = new EventBus();
@@ -58,10 +58,11 @@ WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>()
 
 ## Convenience Predicates
 
-The Predicates class has a convenience method that applies Jackson's fluent path evaluation as a predicate.
+The [Predicates](src/main/java/org/lendingclub/rx/predicate/Predicates.java) class has a convenience method that applies Jackson's fluent path evaluation as a predicate.
 
 The following will filter out only Jacckson JsonNode objects that have a ```foo``` attribute with a value of ```bar```:
 
+```java
 JsonNode data = ...;
 
 Observable.just(data).filter(Predicates.json(json -> {
