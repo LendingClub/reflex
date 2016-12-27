@@ -33,11 +33,13 @@ Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.
 
 ## Bounded Work Queue
 
-It can be hard to reason with RxJava's threading model.  ```WorkQueueObserver``` provides a simple way to put a BlockingQueue/ThreadPoolExecutor 
-between an observable that acts as the worker.  
+Sometimes it can be hard to reason with the Reactive threading model.  [WorkQueue](src/main/java/org/lendingclub/rx/queue/WorkQueue.java) provides a simple way to put a BlockingQueue/ThreadPoolExecutor 
+between a source Observable and an Observable that acts as the worker.
+
+In the following, the Observable consisting of the range of values [0..99] is subscribed-to by a work queue the processes the values in sequence:
 
 ```java
-WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>();
+WorkQueue<Integer> queue = new WorkQueue<Integer>();
 
 queue.getObservable().subscribe(it -> {
     System.out.println("processing "+it+" in "+Thread.currentThread());
@@ -49,7 +51,7 @@ Observable.range(0, 100).subscribe(queue);
 WorkQueueObserver exposes a number of options availbale on the underlying Executor:
 
 ```java
-WorkQueueObserver<Integer> queue = new WorkQueueObserver<Integer>()
+WorkQueue<Integer> queue = new WorkQueue<Integer>()
     .withCoreThreadPoolSize(5)
     .withQueueSize(5000)
     .withThreadName("my-thread-%d")

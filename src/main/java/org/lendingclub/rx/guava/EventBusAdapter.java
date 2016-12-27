@@ -13,7 +13,7 @@ import io.reactivex.subjects.PublishSubject;
 
 public class EventBusAdapter<T> {
 
-	Logger logger = LoggerFactory.getLogger(EventBusAdapter.class);
+	static Logger logger = LoggerFactory.getLogger(EventBusAdapter.class);
 	EventBus bus;
 	PublishSubject<T> publishSubject;
 
@@ -35,6 +35,7 @@ public class EventBusAdapter<T> {
 	
 	public static <T> EventBusAdapter<? extends T> createAdapter(EventBus bus, Class<? extends T> clazz) {
 
+		logger.info("creating adapter for eventBus={} type={}",bus,clazz);
 		EventBusAdapter<T> emitter = new EventBusAdapter<T>();
 		emitter.filterClass = clazz;
 		emitter.bus = bus;
