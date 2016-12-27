@@ -5,7 +5,7 @@ A set of utility classes for working with RxJava 2.x.
 * A binding to Guava's EventBus
 * A bounded work queue implemented as Observables
 * A set of convenience Predicates
-
+* AWS SQS Support
 
 
 ## Guava EventBus Obeservable
@@ -80,3 +80,25 @@ Observable.just(n0).flatMap(FlatMapFilters.json(json -> {
 }));
 ```
 
+## AWS Simple Queue Service (SQS) Support
+
+
+[SQSAdapter](src/main/java/org/lendingclub/rx/aws/sqs/SQSAdapter.java) simplifies the task of reading from an SQS queue and processing it with Rx goodness.
+
+```java
+AmazonSQSClient client = new AmazonSQSClient(new DefaultAWSCredentialsProviderChain());
+
+SQSAdapter adapter = new SQSAdapter()
+    .withSQSClient(client)
+    .withQueueUrl("https://sqs.us-west-2.amazonaws.com/123456789012/myqueue");
+
+adapter.getObservable().flatMap(new SQSAdapter.SQSJsonMessageExtractor()).subscribe(c -> {
+    System.out.println(c);
+});
+
+adapter.start();
+```
+
+
+In particular note ```SQSAdapter.SQSJsonMessageExtractor``` which extracts JSON message payloads.  If the message contains an SNS
+envelope, it will unwrap that envelope as well.
