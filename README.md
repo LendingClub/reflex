@@ -10,7 +10,7 @@ A set of utility classes for working with RxJava 2.x.
 
 ## Guava EventBus Obeservable
 
-EventBusAdapter provides a simple Observable binding to Guava's [EventBus](https://github.com/google/guava/wiki/EventBusExplained).
+[EventBusAdapter](src/main/java/org/lendingclub/rx/guava/EventBusAdapter.java) provides a simple Observable binding to Guava's [EventBus](https://github.com/google/guava/wiki/EventBusExplained).
 
 The following is a simple hello-world example.  ```EventBusAdapter``` subscribes to the EventBus and exposes it as an Observable.
 
@@ -25,7 +25,7 @@ observable.subscribe(it -> {
 eventBus.post("world");
 ```
 
-As a convenience, it is possible to filter event types:
+As a convenience, it is possible to filter events into a type-safe Observable.
 
 ```java
 Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.class);
