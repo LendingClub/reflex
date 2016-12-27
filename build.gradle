@@ -32,8 +32,10 @@ dependencies {
 	compile "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"
 
 	compile "org.slf4j:slf4j-api:${SLF4J_VERSION}"
-	compile "com.google.guava:guava:20.0"  //  <<-- test scope only!
-	
+	compile "com.google.guava:guava:20.0" 
+	compile "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
+    compile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
+    
 	testCompile 'org.assertj:assertj-core:2.2.0'  
 	
 	testCompile "junit:junit:${JUNIT_VERSION}"
