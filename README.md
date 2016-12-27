@@ -1,6 +1,6 @@
 # reflex
 
-A set of utility classes for working with RxJava 2.x.
+Reflex is a set of utilities for working with [RxJava 2.x](https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0) and [Reactive Streams](http://www.reactive-streams.org/)
 
 * A binding to Guava's EventBus
 * A bounded work queue implemented as Observables
@@ -34,7 +34,7 @@ Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.
 
 
 Sometimes it can be hard to reason with the Reactive threading model.  [WorkQueue](src/main/java/org/lendingclub/rx/queue/WorkQueue.java) provides a simple way to put a BlockingQueue/ThreadPoolExecutor 
-between a source Observable and an Observable that acts as the worker.  It may go against the Reactive Manifesto, but it is simple and clear.  With the reactive Schedulers, ```subscribeOn```, and ```observeOn``` it is not always so clear what is happening, so mistakes are easy to make.
+between a source Observable and an Observable that acts as the worker.  It may go against the [Reactive Manifesto](http://www.reactivemanifesto.org/), but this is simple and clear.  With the reactive Schedulers, ```subscribeOn```, and ```observeOn``` it is not always so clear what is happening, so mistakes are easy to make.
 
 
 In the following example, the Observable consisting of the range of values [0..99] is subscribed-to by a work queue the processes the values in sequence in a separate thread:
