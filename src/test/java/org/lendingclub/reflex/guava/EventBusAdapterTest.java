@@ -95,5 +95,6 @@ public class EventBusAdapterTest {
 		eventBus.post("world");
 		eventBus.post(123);
 	}
+	
 
 }

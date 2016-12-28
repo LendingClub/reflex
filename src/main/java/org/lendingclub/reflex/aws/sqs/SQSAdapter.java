@@ -132,13 +132,16 @@ public class SQSAdapter {
 				}
 				return Observable.just(n);
 			} catch (Exception e) {
-				logger.warn("problem parsing message from queue: "+getQueueUrl(), e);
+				logger.warn("problem parsing message from queue: "+t.getSQSAdapter().getQueueUrl(), e);
 			}
 			return Observable.empty();
 		}
 
 	}
 
+	public String getQueueUrl() {
+		return queueUrl;
+	}
 	public synchronized SQSAdapter start() {
 		if (running.get()) {
 			throw new IllegalStateException("already running");
