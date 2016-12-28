@@ -3,6 +3,7 @@ package org.lendingclub.reflex.guava;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
@@ -46,6 +47,7 @@ public class EventBusAdapter<T> {
 	}
 
 	@Subscribe
+	@AllowConcurrentEvents
 	void receive(T obj) {
 
 		if (publishSubject != null) {
