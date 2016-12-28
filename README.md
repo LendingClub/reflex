@@ -11,7 +11,7 @@ Reflex is a set of utilities for working with [RxJava 2.x](https://github.com/Re
 * A set of convenience Predicates
 * AWS SQS Support
 
-## Guava EventBus Obeservable
+## Guava EventBus Observable
 
 [EventBusAdapter](src/main/java/org/lendingclub/reflex/guava/EventBusAdapter.java) provides a simple Observable binding to Guava's [EventBus](https://github.com/google/guava/wiki/EventBusExplained).
 

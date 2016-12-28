@@ -48,6 +48,8 @@ public class SQSAdapter {
 	int messagesPerRequest = 10;
 	AtomicBoolean running = new AtomicBoolean(false);
 
+	long backoffMutiplierMillis = 100;
+	long backoffMaxMillis= TimeUnit.SECONDS.toMillis(60);
 	AtomicLong failureCount = new AtomicLong(0);
 
 	public SQSAdapter withSQSClient(AmazonSQSClient client) {
@@ -55,21 +57,64 @@ public class SQSAdapter {
 		return this;
 	}
 
+	/**
+	 * SQS is implemented with long-polling.  This is the number of seconds that the SQS receive-message operation will block
+	 * before closing and executing another.  Default: 10
+	 * @param secs
+	 * @return
+	 */
 	public SQSAdapter withWaitTimeSeconds(int secs) {
 		this.waitTimeSeconds = secs;
 		return this;
 	}
 
+	/**
+	 * The SQS client can request between 1-10 messages per GET request.  Default: 10.
+	 * @param count
+	 * @return
+	 */
 	public SQSAdapter withMaxMessagesPerRequest(int count) {
 		this.messagesPerRequest = count;
 		return this;
 	}
 
+	/**
+	 * If you do not specify the queue URL and the client is set to the correct region, SQSAdapter will resolve the URL
+	 * from the unqualified queue name.  If the url is set, there is no need to set the name.
+	 * @param name
+	 * @return
+	 */
 	public SQSAdapter withQueueName(String name) {
 		this.queueName = name;
 		return this;
 	}
-
+	
+	/**
+	 * Exponential backoff multiplier.  (failureCount ^ 2 * multiplier)
+	 * @param millis
+	 * @return
+	 */
+	public SQSAdapter withBackoffMultiplierMillis(long millis) {
+		this.backoffMutiplierMillis = millis;
+		return this;
+	}
+	
+	/**
+	 * Maximum number of milliseconds that retries will wait in the case of failure.
+	 * Default: 60000ms (60 seconds)
+	 * @param millis
+	 * @return
+	 */
+	public SQSAdapter withBackofMaxMillis(long millis) {
+		this.backoffMaxMillis = millis;
+		return this;
+	}
+	
+	/**
+	 * Sets the SQS queue URL that the SQSAdpater will use for polling.
+	 * @param url
+	 * @return
+	 */
 	public SQSAdapter withQueueUrl(String url) {
 		this.queueUrl = url;
 		return this;
@@ -87,7 +132,7 @@ public class SQSAdapter {
 				}
 				return Observable.just(n);
 			} catch (Exception e) {
-				logger.warn("problem", e);
+				logger.warn("problem parsing message from queue: "+getQueueUrl(), e);
 			}
 			return Observable.empty();
 		}
@@ -127,7 +172,7 @@ public class SQSAdapter {
 									if (autoDelete) {
 										delete(message);
 									}
-									resetBackoff();
+									resetFailureCount();
 								} catch (Exception e) {
 									handleException(e);
 								}
@@ -156,7 +201,8 @@ public class SQSAdapter {
 		sqs.deleteMessage(dmr);
 	}
 
-	private void resetBackoff() {
+	
+	private void resetFailureCount() {
 		failureCount.set(0);
 	}
 
@@ -167,6 +213,7 @@ public class SQSAdapter {
 		long wait = (count ^ 2) * 100;
 		wait = Math.min(wait, TimeUnit.SECONDS.toMillis(60));
 		try {
+			logger.debug("sleeping for {}ms due to {} failures",wait,count);
 			Thread.sleep(wait);
 		} catch (InterruptedException x) {
 		}
