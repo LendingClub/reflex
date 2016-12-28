@@ -38,7 +38,7 @@ public class WorkQueue<T> implements Observer<T> {
 	int maxThreadPoolSize = 1;
 	int time = 30;
 	TimeUnit timeUnit = TimeUnit.SECONDS;
-	RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.DiscardPolicy();
+	RejectedExecutionHandler rejectedExecutionHandler = new MyRejectedExecutionHandler();
 	LinkedBlockingDeque<Runnable> queue;
 	ThreadPoolExecutor executor;
 	
@@ -49,6 +49,17 @@ public class WorkQueue<T> implements Observer<T> {
 		
 	}
 
+	class MyRejectedExecutionHandler extends ThreadPoolExecutor.DiscardPolicy {
+
+		@Override
+		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+			
+			super.rejectedExecution(r, e);
+			logger.error("rejected {} in {}",r,e);
+		}
+		
+	};
+	
 	public ThreadPoolExecutor getThreadPoolExecutor() {
 		Preconditions.checkState(executor!=null,"WorkQueueObserver has not been started");
 		return executor;
