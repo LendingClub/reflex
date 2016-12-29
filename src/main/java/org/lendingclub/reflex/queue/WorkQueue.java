@@ -1,5 +1,6 @@
 package org.lendingclub.reflex.queue;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -41,7 +43,7 @@ public class WorkQueue<T> implements Observer<T> {
 	RejectedExecutionHandler rejectedExecutionHandler = new MyRejectedExecutionHandler();
 	LinkedBlockingDeque<Runnable> queue;
 	ThreadPoolExecutor executor;
-	
+	UncaughtExceptionHandler uncaughtExceptionHandler = null;
 	final PublishSubject<T> publishSubject = PublishSubject.create();
 	
 	
@@ -114,9 +116,14 @@ public class WorkQueue<T> implements Observer<T> {
 			logger.info("coreSize: {}",coreThreadPoolSize);
 			logger.info("maxSize : {}",maxThreadPoolSize);
 			
+			
 			ThreadPoolExecutor localExecutor= new ThreadPoolExecutor(coreThreadPoolSize,maxThreadPoolSize, time, timeUnit,
 					queue);
-			localExecutor.setThreadFactory(new ThreadFactoryBuilder().setDaemon(true).setNameFormat(name).build());
+			ThreadFactoryBuilder tfb = new ThreadFactoryBuilder().setDaemon(true).setNameFormat(name);
+			if (uncaughtExceptionHandler!=null) {
+				tfb.setUncaughtExceptionHandler(uncaughtExceptionHandler);
+			}
+			localExecutor.setThreadFactory(tfb.build());
 			
 			localExecutor.setRejectedExecutionHandler(rejectedExecutionHandler);
 			
@@ -164,4 +171,6 @@ public class WorkQueue<T> implements Observer<T> {
 	private void assertNotStarted() {
 		Preconditions.checkState(executor==null,"start() called already");
 	}
+	
+
 }

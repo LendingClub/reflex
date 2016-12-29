@@ -16,6 +16,7 @@ import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
@@ -34,6 +35,9 @@ public class SQSAdapter {
 
 		public SQSAdapter getSQSAdapter() {
 			return SQSAdapter.this;
+		}
+		public void delete() {
+			SQSAdapter.this.delete(message);
 		}
 	}
 
@@ -95,10 +99,20 @@ public class SQSAdapter {
 	 * @return
 	 */
 	public SQSAdapter withBackoffMultiplierMillis(long millis) {
+		assertNotStarted();
 		this.backoffMutiplierMillis = millis;
 		return this;
 	}
 	
+	public boolean isAutoDeleteEnabled() {
+		return autoDelete;
+	}
+	
+	public SQSAdapter withAutoDeleteEnabled(boolean b) {
+		assertNotStarted();
+		this.autoDelete = b;
+		return this;
+	}
 	/**
 	 * Maximum number of milliseconds that retries will wait in the case of failure.
 	 * Default: 60000ms (60 seconds)
@@ -106,6 +120,7 @@ public class SQSAdapter {
 	 * @return
 	 */
 	public SQSAdapter withBackofMaxMillis(long millis) {
+		assertNotStarted();
 		this.backoffMaxMillis = millis;
 		return this;
 	}
@@ -116,6 +131,7 @@ public class SQSAdapter {
 	 * @return
 	 */
 	public SQSAdapter withQueueUrl(String url) {
+		assertNotStarted();
 		this.queueUrl = url;
 		return this;
 	}
@@ -208,7 +224,9 @@ public class SQSAdapter {
 	private void resetFailureCount() {
 		failureCount.set(0);
 	}
-
+	private void assertNotStarted() {
+		Preconditions.checkState(running.get()==false,"start() already called");
+	}
 	protected void handleException(Exception e) {
 		logger.warn("problem receiving message from queue: " + queueUrl, e);
 		long count = failureCount.incrementAndGet();

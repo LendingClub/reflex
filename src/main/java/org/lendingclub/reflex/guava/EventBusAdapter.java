@@ -24,9 +24,9 @@ public class EventBusAdapter<T> {
 	public static <T> Observable<T> toObservable(EventBus bus, Class<? extends T> clazz) {
 		return (Observable<T>) createAdapter(bus, clazz).getObservable();
 	}
+	
 	@SuppressWarnings("unchecked")
 	public static  Observable<Object> toObservable(EventBus bus) {
-		
 		return (Observable<Object>) createAdapter(bus, Object.class).getObservable();
 	}
 	
@@ -52,7 +52,12 @@ public class EventBusAdapter<T> {
 
 		if (publishSubject != null) {
 			if (obj != null && filterClass.isInstance(obj)) {
-				publishSubject.onNext(obj);
+				try {
+					publishSubject.onNext(obj);
+				}
+				catch (RuntimeException e) {
+					logger.warn("problem",e);
+				}
 			}
 			
 		}
