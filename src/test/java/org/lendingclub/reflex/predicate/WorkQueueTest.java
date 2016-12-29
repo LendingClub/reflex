@@ -55,13 +55,14 @@ public class WorkQueueTest {
 				
 
 		queue.getObservable().subscribe(Consumers.safeConsumer(it -> {
-			latch.countDown();
+		
 			if (totalCount.incrementAndGet() % 10==0) {
+				latch.countDown();
 				throw new RuntimeException();
 			}
 			System.out.println("processing " + it + " in " + Thread.currentThread());
 			success.incrementAndGet();
-			
+			latch.countDown();
 		}));
 
 		Observable.range(0, count).subscribe(queue);
