@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 
 public class Consumers {
@@ -30,22 +31,41 @@ public class Consumers {
 		};
 		return wrapper;
 	}
-	
-	public static <T> Consumer<T> safeConsumer(Observer<T> observer) {
 
-		return safeConsumer(observer, LoggerFactory.getLogger(observer.getClass()));
+	public static <T> Observer<T> safeObserver(Observer<T> observer) {
+		return safeObserver(observer, LoggerFactory.getLogger(observer.getClass()));
 	}
-	public static <T> Consumer<T> safeConsumer(Observer<T> observer, Logger logger) {
 
-		Consumer<T> wrapper = new Consumer<T>() {
+	public static <T> Observer<T> safeObserver(final Observer<T> observer, Logger logger) {
+
+		Observer<T> wrapper = new Observer<T>() {
+			Observer<T> x = observer;
 
 			@Override
-			public void accept(T t) throws Exception {
+			public void onSubscribe(Disposable d) {
+				x.onSubscribe(d);
+
+			}
+
+			@Override
+			public void onNext(T t) {
 				try {
-					observer.onNext(t);
+					x.onNext(t);
 				} catch (Exception e) {
-					logger.error("exception in consumer", e);
+					logger.error("exception in Observer", e);
 				}
+
+			}
+
+			@Override
+			public void onError(Throwable e) {
+				x.onError(e);
+
+			}
+
+			@Override
+			public void onComplete() {
+				x.onComplete();
 
 			}
 
