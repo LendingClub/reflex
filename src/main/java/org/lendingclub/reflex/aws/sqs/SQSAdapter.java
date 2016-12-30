@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.lendingclub.reflex.consumer.Consumers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 
 import io.reactivex.Observable;
@@ -112,7 +114,16 @@ public class SQSAdapter {
 		this.waitTimeSeconds = secs;
 		return this;
 	}
-
+	/**
+	 * SQS is implemented with long-polling. This is the number of seconds that
+	 * the SQS receive-message operation will block before closing and executing
+	 * another. Default: 10
+	 * 
+	 * @return number of seconds that any HTTPS call should wait
+	 */
+	public int getWaitTimeSeconds() {
+		return this.waitTimeSeconds;
+	}
 	/**
 	 * The SQS client can request between 1-10 messages per GET request.
 	 * Default: 10.
@@ -124,7 +135,10 @@ public class SQSAdapter {
 		this.messagesPerRequest = count;
 		return this;
 	}
-
+	
+	public int getMessagesPerRequest() {
+		return messagesPerRequest;
+	}
 	/**
 	 * If you do not specify the queue URL and the client is set to the correct
 	 * region, SQSAdapter will resolve the URL from the unqualified queue name.
@@ -138,6 +152,12 @@ public class SQSAdapter {
 		return this;
 	}
 
+	/** Do NOT MAKE THIS PUBLIC.  Unless we work out the complexities of resolving the queue name, since
+	 * the user may have only specified the URL and might expect the queue name to be resolved...which it currently
+	 * does not do. */
+	private String getQueueName() {
+		return this.queueName;
+	}
 	/**
 	 * Exponential backoff multiplier. (failureCount ^ 2 * multiplier)
 	 * 
@@ -149,11 +169,23 @@ public class SQSAdapter {
 		this.backoffMutiplierMillis = millis;
 		return this;
 	}
-
+	
+	public long getBackoffMultiplierMillis() {
+		return backoffMutiplierMillis;
+	}
+	
 	public boolean isAutoDeleteEnabled() {
 		return autoDelete;
 	}
 
+	/**
+	 * Connects this SQSAdapter to an EventBus.
+	 * @param bus
+	 * @return
+	 */
+	public SQSAdapter withEventBus(EventBus bus) {
+		return connectTo(bus);
+	}
 	public SQSAdapter withAutoDeleteEnabled(boolean b) {
 		assertNotStarted();
 		this.autoDelete = b;
@@ -242,8 +274,8 @@ public class SQSAdapter {
 				while (running.get()) {
 					try {
 						ReceiveMessageRequest rmr = new ReceiveMessageRequest();
-						rmr.setWaitTimeSeconds(waitTimeSeconds);
-						rmr.setMaxNumberOfMessages(messagesPerRequest);
+						rmr.setWaitTimeSeconds(getWaitTimeSeconds());
+						rmr.setMaxNumberOfMessages(getMessagesPerRequest());
 						if (urlSupplier == null) {
 							throw new IllegalArgumentException("queueUrl or queueName must be set");
 						}
@@ -327,6 +359,18 @@ public class SQSAdapter {
 
 	public Observable<SQSMessage> getObservable() {
 		return publishSubject;
+	}
+	
+	/**
+	 * Connects this adapter to an EventBus that will receive messages.
+	 * @param bus
+	 * @return
+	 */
+	public SQSAdapter connectTo(EventBus bus) {
+		getObservable().subscribe(Consumers.safeConsumer(m -> {
+			bus.post(m);
+		}));
+		return this;
 	}
 	
 	protected long getBackoffInterval() {
