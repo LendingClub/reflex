@@ -147,6 +147,10 @@ public class WorkQueue<T> implements Observer<T> {
 	@Override
 	public void onNext(T t) {
 
+		if (executor==null) {
+			logger.warn("not started...onSubscribe() not called");
+			return;
+		}
 		Runnable r = new Runnable() {
 
 			@Override
@@ -157,8 +161,8 @@ public class WorkQueue<T> implements Observer<T> {
 
 		};
 
-	
-		executor.submit(r);
+		
+		executor.execute(r);
 		
 
 	}

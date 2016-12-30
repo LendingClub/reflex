@@ -44,7 +44,6 @@ public class Consumers {
 			@Override
 			public void onSubscribe(Disposable d) {
 				x.onSubscribe(d);
-
 			}
 
 			@Override
