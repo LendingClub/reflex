@@ -7,9 +7,9 @@ apply plugin: "jacoco"
 group 'org.lendingclub'
 version = "1.1.0"
 configurations {
-	//all*.exclude group: 'org.codehaus.groovy', module: 'groovy'
-	all*.exclude group: 'log4j'
-	all*.exclude group: 'xml-apis'
+    //all*.exclude group: 'org.codehaus.groovy', module: 'groovy'
+    //all*.exclude group: 'log4j'
+    //all*.exclude group: 'xml-apis'
     all*.exclude group: 'commons-logging'
 }
 
@@ -27,28 +27,29 @@ targetCompatibility = 1.8
 dependencies {
 
 
-	compile "io.reactivex:rxjava:${RXJAVA1_VERSION}"
-    compile "io.reactivex.rxjava2:rxjava:${RXJAVA2_VERSION}"
-	compile "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"
 
-	compile "org.slf4j:slf4j-api:${SLF4J_VERSION}"
-	compile "com.google.guava:guava:20.0" 
+    compile "io.reactivex.rxjava2:rxjava:${RXJAVA2_VERSION}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"
+
+    compile "org.slf4j:slf4j-api:${SLF4J_VERSION}"
+    compile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
+    compile "com.google.guava:guava:20.0" 
     
     // Optional dependencies
-	compileOnly "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
+    compileOnly "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
     compileOnly 'io.dropwizard.metrics:metrics-core:3.1.2'
 
-	testCompile 'org.assertj:assertj-core:2.2.0'  
-	
-	testCompile "junit:junit:${JUNIT_VERSION}"
-	
-	testCompile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
-	testCompile "org.slf4j:jul-to-slf4j:${SLF4J_VERSION}"
+    testCompile 'org.assertj:assertj-core:2.2.0'  
+    
+    testCompile "junit:junit:${JUNIT_VERSION}"
+    
+    testCompile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
+    testCompile "org.slf4j:jul-to-slf4j:${SLF4J_VERSION}"
     testCompile "org.mockito:mockito-all:1.10.19"
-	testCompile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
+
     
     
-	testCompile "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
+    testCompile "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
     testCompile 'io.dropwizard.metrics:metrics-core:3.1.2'
 }
 
@@ -60,12 +61,12 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
-	
+    
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
-	
-	
+    
+    
 }
 
 artifacts {
@@ -74,42 +75,42 @@ artifacts {
 uploadArchives {
     repositories {
         mavenDeployer {
-			
+            
             name = 'macgyver-bintray'
 
-			if (!project.ext.has('BINRAY_USER')) {
-				project.ext['BINTRAY_USER']=System.getenv("BINTRAY_USER")
-			}
-			if (!project.ext.has('BINTRAY_KEY')) {
-				project.ext['BINTRAY_KEY'] = System.getenv("BINTRAY_KEY")
-			}
-			
+            if (!project.ext.has('BINRAY_USER')) {
+                project.ext['BINTRAY_USER']=System.getenv("BINTRAY_USER")
+            }
+            if (!project.ext.has('BINTRAY_KEY')) {
+                project.ext['BINTRAY_KEY'] = System.getenv("BINTRAY_KEY")
+            }
+            
             repository(id: 'macgyver-bintray', url: 'https://api.bintray.com/maven/lendingclub/OSS/reflex'){
                 authentication(userName: BINTRAY_USER, password: BINTRAY_KEY)
-			}
+            }
             pom.project {
-				
-				name 'reflex'
-				description 'Tools to support Reactive Streams'
-				url 'https://github.com/LendingClub/reflex'
+                
+                name 'reflex'
+                description 'Tools to support Reactive Streams'
+                url 'https://github.com/LendingClub/reflex'
                 licenses {
                     license {
                         name 'The Apache Software License, Version 2.0'
                         url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-						distribution 'repo'
+                        distribution 'repo'
                     }
                 }
-				scm {
-					connection 'scm:git:git@github.com:LendingClub/reflex.git'
-					developerConnection 'scm:git:git@github.com:LendingClub/reflex.git'
-					url 'git@github.com:LendingClub/reflex.git'
-				}
-            	developers {
-					developer {
-						name 'Rob Schoening'
-						email 'rschoening@lendingclub.com'
-					}
-				}
+                scm {
+                    connection 'scm:git:git@github.com:LendingClub/reflex.git'
+                    developerConnection 'scm:git:git@github.com:LendingClub/reflex.git'
+                    url 'git@github.com:LendingClub/reflex.git'
+                }
+                developers {
+                    developer {
+                        name 'Rob Schoening'
+                        email 'rschoening@lendingclub.com'
+                    }
+                }
             }
         }
     }
