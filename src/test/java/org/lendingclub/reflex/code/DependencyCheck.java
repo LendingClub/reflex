@@ -17,7 +17,7 @@ import com.google.common.base.Charsets;
 public class DependencyCheck {
 
 	@Test
-	public void testIt() throws IOException {
+	public void checkForInvalidCodahaleRefs() throws IOException {
 
 		FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
 
@@ -27,13 +27,36 @@ public class DependencyCheck {
 				String absoluteFileName = file.toFile().getAbsolutePath();
 				if (file.toFile().getAbsolutePath().endsWith(".java")) {
 					String contents = com.google.common.io.Files.toString(file.toFile(), Charsets.UTF_8);
-					if (!file.toFile().getAbsolutePath().endsWith("MetricsMonitor.java")) {
+					if (!file.toFile().getAbsolutePath().endsWith("ReflexMetrics.java")) {
 						
 						if (contents.contains("codahale")) {
 							Assertions.fail("source should not contain references to codahale: "+file);
 						}
 						
 					}
+				
+					
+				}
+				
+				return super.visitFile(file, attrs);
+			}
+
+		};
+		Files.walkFileTree(new File("./src/main/java").toPath(), visitor);
+	}
+
+	@Test
+	public void checkForAmazonRefs() throws IOException {
+
+		FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+
+				String absoluteFileName = file.toFile().getAbsolutePath();
+				if (file.toFile().getAbsolutePath().endsWith(".java")) {
+					String contents = com.google.common.io.Files.toString(file.toFile(), Charsets.UTF_8);
+					
 					
 					if (!file.toFile().getAbsolutePath().contains("aws") && contents.contains("amazon")) {
 						Assertions.fail("source should not contain references to amazon: "+file);
@@ -47,8 +70,6 @@ public class DependencyCheck {
 		};
 		Files.walkFileTree(new File("./src/main/java").toPath(), visitor);
 	}
-
-	
 	@Test
 	public void checkForPrintln() throws IOException {
 
