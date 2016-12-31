@@ -7,14 +7,14 @@ import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Test;
-import org.lendingclub.reflex.metrics.MetricsMonitor;
+import org.lendingclub.reflex.metrics.ReflexMetrics;
 
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 
-public class MetricsTest {
+public class ReflexMetricsTest {
 
 	ThreadPoolExecutor tpe;
 	
@@ -29,7 +29,7 @@ public class MetricsTest {
 		System.out.println(queue.remainingCapacity());
 		tpe = new ThreadPoolExecutor(10, 10, 10, TimeUnit.SECONDS, queue);
 
-		new MetricsMonitor().withMetricRegistry(r).withPrefix("test").monitor(tpe, "testThreadPool");
+		new ReflexMetrics().withMetricRegistry(r).withPrefix("test").monitor(tpe, "testThreadPool");
 
 		Assertions.assertThat(r.getMetrics().get("test.testThreadPool.corePoolSize")).isNotNull().isInstanceOf(
 				Gauge.class);

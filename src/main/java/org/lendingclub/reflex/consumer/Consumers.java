@@ -2,12 +2,9 @@ package org.lendingclub.reflex.consumer;
 
 import org.lendingclub.reflex.exception.ExceptionHandlers;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
-import io.reactivex.observers.SafeObserver;
 
 public class Consumers {
 

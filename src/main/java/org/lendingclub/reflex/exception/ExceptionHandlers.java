@@ -6,9 +6,7 @@ import org.slf4j.LoggerFactory;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.Exceptions;
-import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.SafeObserver;
 
 public class ExceptionHandlers {

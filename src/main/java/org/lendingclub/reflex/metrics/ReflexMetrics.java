@@ -1,31 +1,31 @@
 package org.lendingclub.reflex.metrics;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.lendingclub.reflex.aws.sqs.SQSAdapter;
+import org.lendingclub.reflex.guava.EventBusAdapter;
+import org.lendingclub.reflex.queue.WorkQueue;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-public class MetricsMonitor {
+public class ReflexMetrics {
 
 	MetricRegistry registry;
 	String prefix;
 
-	public MetricsMonitor withMetricRegistry(MetricRegistry r) {
+	public ReflexMetrics withMetricRegistry(MetricRegistry r) {
 
-		MetricsMonitor m = new MetricsMonitor();
+		ReflexMetrics m = new ReflexMetrics();
 		m.registry = r;
 
 		return m;
 	}
 
-	public MetricsMonitor withPrefix(String prefix) {
+	public ReflexMetrics withPrefix(String prefix) {
 		this.prefix = prefix;
 		return this;
 	}
@@ -44,7 +44,7 @@ public class MetricsMonitor {
 
 	}
 
-	public MetricsMonitor monitor(ThreadPoolExecutor tpe, String name) {
+	public ReflexMetrics monitor(ThreadPoolExecutor tpe, String name) {
 		
 		Preconditions.checkState(registry!=null,"MetricRegistry not set.  Please call withMetricRegistry() first");
 		Gauge<Integer> activeCountGauge = new Gauge<Integer>() {
@@ -137,5 +137,28 @@ public class MetricsMonitor {
 		};
 	}
 
+
+	public ReflexMetrics monitor(SQSAdapter adapter, String name) {
+
+		registerGauge(name,"failure", adapter.getSuccesiveFailureCount());
+		registerGauge(name,"totalFailure",
+				adapter.getTotalFailureCount());
+		
+		registerGauge(name,"messagesReceived",adapter.getTotalMessagesReceivedCount());
+		registerGauge(name,"success",adapter.getTotalSuccessCount());
+		return this;
+	}
+	
+	public ReflexMetrics monitor(EventBusAdapter adapter, String name) {
+		
+		registerGauge(name, "count",adapter.getMessageCount());
+		return this;
+	}
+	
+	public <T> ReflexMetrics monitor(WorkQueue<T> t, String name) {
+		
+		monitor(t.getThreadPoolExecutor(), name);
+		return this;
+	}
 
 }

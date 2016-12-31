@@ -80,6 +80,9 @@ public class EventBusAdapter<T> {
 
 	}
 
+	public AtomicLong getMessageCount() {
+		return counter;
+	}
 	
 	public Observable<T> getObservable() {
 		return observableWithCounter;
