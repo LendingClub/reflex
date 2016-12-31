@@ -421,6 +421,10 @@ public class SQSAdapter {
 
 	}
 	
+	public AmazonSQSClient getSQSClient() {
+		return sqs;
+	}
+	
 	public AtomicLong getSuccesiveFailureCount() {
 		return successiveFailureCount;
 	}
