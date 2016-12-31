@@ -13,15 +13,10 @@ general:
         
 test:
     override:
-        - ./gradlew clean check install
+        - ./.circleci/build.sh
     post:
         - mkdir -p $CIRCLE_TEST_REPORTS/junit/
         - find . -type f -regex ".*/build/test-results/.*.xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
         - ./gradlew jacocoTestReport
         - bash <(curl -s https://codecov.io/bash)
         
-deployment:
-    bintray:
-        branch: bintray
-        commands:
-            - ./gradlew uploadArchives
