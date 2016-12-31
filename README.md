@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/LendingClub/reflex.svg?style=svg)](https://circleci.com/gh/LendingClub/reflex)
 [ ![Download](https://api.bintray.com/packages/lendingclub/OSS/reflex/images/download.svg) ](https://bintray.com/lendingclub/OSS/reflex/_latestVersion)
+[![CodeCov](https://codecov.io/github/LendingClub/reflex/coverage.svg)](https://codecov.io/github/LendingClub/reflex)
 
 Reflex is a set of utilities for working with [RxJava 2.x](https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0) and [Reactive Streams](http://www.reactive-streams.org/)
 
