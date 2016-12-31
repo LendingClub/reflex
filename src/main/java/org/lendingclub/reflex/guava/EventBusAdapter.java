@@ -1,5 +1,7 @@
 package org.lendingclub.reflex.guava;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,7 @@ import com.google.common.eventbus.Subscribe;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.subjects.PublishSubject;
 
@@ -17,9 +20,21 @@ public class EventBusAdapter<T> {
 	static Logger logger = LoggerFactory.getLogger(EventBusAdapter.class);
 	EventBus bus;
 	PublishSubject<T> publishSubject;
-
+	Observable<T> observableWithCounter;
+	AtomicLong counter = new AtomicLong();
+	
+	
 	Class<? extends Object> filterClass;
 
+	class CounterFunction implements Function<T, T> {
+
+		@Override
+		public T apply(T t) throws Exception {
+			counter.incrementAndGet();
+			return (T) t;
+		}
+		
+	}
 	@SuppressWarnings("unchecked")
 	public static <T> Observable<T> toObservable(EventBus bus, Class<? extends T> clazz) {
 		return (Observable<T>) createAdapter(bus, clazz).getObservable();
@@ -41,6 +56,7 @@ public class EventBusAdapter<T> {
 		emitter.filterClass = clazz;
 		emitter.bus = bus;
 		emitter.publishSubject = PublishSubject.create();
+		emitter.observableWithCounter = emitter.publishSubject.map(emitter.new CounterFunction());
 		bus.register(emitter);
 
 		return emitter;
@@ -64,7 +80,8 @@ public class EventBusAdapter<T> {
 
 	}
 
+	
 	public Observable<T> getObservable() {
-		return publishSubject;
+		return observableWithCounter;
 	}
 }

@@ -1,75 +1,36 @@
 package org.lendingclub.reflex.consumer;
 
+import org.lendingclub.reflex.exception.ExceptionHandlers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.observers.SafeObserver;
 
 public class Consumers {
 
+	
+	@Deprecated
 	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer) {
-
-		return safeConsumer(consumer, LoggerFactory.getLogger(consumer.getClass()));
+	
+		return ExceptionHandlers.safeConsumer(consumer);
 	}
 
+	@Deprecated
 	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer, Logger logger) {
 
-		Consumer<T> wrapper = new Consumer<T>() {
-
-			@Override
-			public void accept(T t) throws Exception {
-				try {
-					consumer.accept(t);
-				} catch (Exception e) {
-					logger.error("exception in consumer", e);
-				}
-
-			}
-
-		};
-		return wrapper;
+		return ExceptionHandlers.safeConsumer(consumer, logger);
 	}
 
+	@Deprecated
 	public static <T> Observer<T> safeObserver(Observer<T> observer) {
-		return safeObserver(observer, LoggerFactory.getLogger(observer.getClass()));
+		return ExceptionHandlers.safeObserver(observer);
 	}
-
+	@Deprecated
 	public static <T> Observer<T> safeObserver(final Observer<T> observer, Logger logger) {
-
-		Observer<T> wrapper = new Observer<T>() {
-			Observer<T> x = observer;
-
-			@Override
-			public void onSubscribe(Disposable d) {
-				x.onSubscribe(d);
-			}
-
-			@Override
-			public void onNext(T t) {
-				try {
-					x.onNext(t);
-				} catch (Exception e) {
-					logger.error("exception in Observer", e);
-				}
-
-			}
-
-			@Override
-			public void onError(Throwable e) {
-				x.onError(e);
-
-			}
-
-			@Override
-			public void onComplete() {
-				x.onComplete();
-
-			}
-
-		};
-		return wrapper;
+		return ExceptionHandlers.safeObserver(observer,logger);
 	}
 
 }

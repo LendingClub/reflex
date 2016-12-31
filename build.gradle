@@ -5,7 +5,7 @@ apply plugin: 'maven'
 apply plugin: "jacoco"
 
 group 'org.lendingclub'
-version = "1.0.7"
+version = "1.1.0"
 configurations {
 	//all*.exclude group: 'org.codehaus.groovy', module: 'groovy'
 	all*.exclude group: 'log4j'
@@ -33,9 +33,11 @@ dependencies {
 
 	compile "org.slf4j:slf4j-api:${SLF4J_VERSION}"
 	compile "com.google.guava:guava:20.0" 
-	compile "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
-    compile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
     
+    // Optional dependencies
+	compileOnly "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
+    compileOnly 'io.dropwizard.metrics:metrics-core:3.1.2'
+
 	testCompile 'org.assertj:assertj-core:2.2.0'  
 	
 	testCompile "junit:junit:${JUNIT_VERSION}"
@@ -43,7 +45,11 @@ dependencies {
 	testCompile "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
 	testCompile "org.slf4j:jul-to-slf4j:${SLF4J_VERSION}"
     testCompile "org.mockito:mockito-all:1.10.19"
-	
+	testCompile "org.slf4j:jcl-over-slf4j:${SLF4J_VERSION}"
+    
+    
+	testCompile "com.amazonaws:aws-java-sdk-sqs:${AWS_SDK_VERSION}"
+    testCompile 'io.dropwizard.metrics:metrics-core:3.1.2'
 }
 
 task wrapper(type: Wrapper) {

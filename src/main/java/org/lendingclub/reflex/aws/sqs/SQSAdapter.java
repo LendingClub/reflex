@@ -1,13 +1,11 @@
 package org.lendingclub.reflex.aws.sqs;
 
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
-import org.lendingclub.reflex.consumer.Consumers;
+import org.lendingclub.reflex.exception.ExceptionHandlers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +22,6 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
-import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
@@ -33,7 +30,7 @@ import io.reactivex.subjects.PublishSubject;
 public class SQSAdapter {
 
 	static ObjectMapper mapper = new ObjectMapper();
-
+	
 	public class SQSMessage {
 		Message message;
 
@@ -49,7 +46,7 @@ public class SQSAdapter {
 			SQSAdapter.this.delete(message);
 		}
 	}
-	
+
 	public static class SQSUrlSupplier implements Supplier<String> {
 
 		private String queueUrl;
@@ -90,16 +87,19 @@ public class SQSAdapter {
 	int waitTimeSeconds = 10;
 	int messagesPerRequest = 10;
 	AtomicBoolean running = new AtomicBoolean(false);
-
+	String name = null;
 	long backoffMutiplierMillis = 100;
 	long backoffMaxMillis = TimeUnit.SECONDS.toMillis(60);
-	AtomicLong failureCount = new AtomicLong(0);
-
-
-	public SQSAdapter withSQSClient(AmazonSQSClient client) {
+	AtomicLong successiveFailureCount = new AtomicLong(0);
+	AtomicLong messageReceiveCount = new AtomicLong(0);
+	AtomicLong dispatchSuccessCount = new AtomicLong(0);
+	AtomicLong totalFailureCount = new AtomicLong(0);
+	
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withSQSClient(AmazonSQSClient client) {
 
 		this.sqs = client;
-		return this;
+		return (T) this;
 	}
 
 	/**
@@ -110,10 +110,12 @@ public class SQSAdapter {
 	 * @param secs
 	 * @return
 	 */
-	public SQSAdapter withWaitTimeSeconds(int secs) {
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withWaitTimeSeconds(int secs) {
 		this.waitTimeSeconds = secs;
-		return this;
+		return (T) this;
 	}
+
 	/**
 	 * SQS is implemented with long-polling. This is the number of seconds that
 	 * the SQS receive-message operation will block before closing and executing
@@ -124,6 +126,7 @@ public class SQSAdapter {
 	public int getWaitTimeSeconds() {
 		return this.waitTimeSeconds;
 	}
+
 	/**
 	 * The SQS client can request between 1-10 messages per GET request.
 	 * Default: 10.
@@ -131,14 +134,16 @@ public class SQSAdapter {
 	 * @param count
 	 * @return
 	 */
-	public SQSAdapter withMaxMessagesPerRequest(int count) {
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withMaxMessagesPerRequest(int count) {
 		this.messagesPerRequest = count;
-		return this;
+		return (T) this;
 	}
-	
+
 	public int getMessagesPerRequest() {
 		return messagesPerRequest;
 	}
+
 	/**
 	 * If you do not specify the queue URL and the client is set to the correct
 	 * region, SQSAdapter will resolve the URL from the unqualified queue name.
@@ -147,49 +152,68 @@ public class SQSAdapter {
 	 * @param name
 	 * @return
 	 */
-	public SQSAdapter withQueueName(String name) {
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withQueueName(String name) {
 		this.queueName = name;
-		return this;
+		return (T) this;
 	}
 
-	/** Do NOT MAKE THIS PUBLIC.  Unless we work out the complexities of resolving the queue name, since
-	 * the user may have only specified the URL and might expect the queue name to be resolved...which it currently
-	 * does not do. */
+	/**
+	 * Do NOT MAKE THIS PUBLIC. Unless we work out the complexities of resolving
+	 * the queue name, since the user may have only specified the URL and might
+	 * expect the queue name to be resolved...which it currently does not do.
+	 */
 	private String getQueueName() {
 		return this.queueName;
 	}
+
 	/**
 	 * Exponential backoff multiplier. (failureCount ^ 2 * multiplier)
 	 * 
 	 * @param millis
 	 * @return
 	 */
-	public SQSAdapter withBackoffMultiplierMillis(long millis) {
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withBackoffMultiplierMillis(long millis) {
 		assertNotStarted();
 		this.backoffMutiplierMillis = millis;
-		return this;
+		return (T) this;
 	}
-	
+
 	public long getBackoffMultiplierMillis() {
 		return backoffMutiplierMillis;
 	}
-	
+
 	public boolean isAutoDeleteEnabled() {
 		return autoDelete;
 	}
 
 	/**
 	 * Connects this SQSAdapter to an EventBus.
+	 * 
 	 * @param bus
 	 * @return
 	 */
-	public SQSAdapter withEventBus(EventBus bus) {
-		return connectTo(bus);
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withEventBus(EventBus bus) {
+		return (T) connectTo(bus);
 	}
-	public SQSAdapter withAutoDeleteEnabled(boolean b) {
+
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withName(String name) {
+		this.name = name;
+		return (T) this;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withAutoDeleteEnabled(boolean b) {
 		assertNotStarted();
 		this.autoDelete = b;
-		return this;
+		return (T) this;
 	}
 
 	/**
@@ -199,10 +223,11 @@ public class SQSAdapter {
 	 * @param millis
 	 * @return
 	 */
-	public SQSAdapter withBackofMaxMillis(long millis) {
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withBackofMaxMillis(long millis) {
 		assertNotStarted();
 		this.backoffMaxMillis = millis;
-		return this;
+		return (T) this;
 	}
 
 	/**
@@ -211,10 +236,11 @@ public class SQSAdapter {
 	 * @param url
 	 * @return
 	 */
-	public SQSAdapter withQueueUrl(String url) {
+	@SuppressWarnings("unchecked")
+	public <T extends SQSAdapter> T withQueueUrl(String url) {
 		assertNotStarted();
 		this.urlSupplier = new SQSUrlSupplier(url);
-		return this;
+		return (T) this;
 	}
 
 	public static class SQSJsonMessageExtractor implements Function<SQSMessage, Observable<JsonNode>> {
@@ -251,10 +277,12 @@ public class SQSAdapter {
 		logger.info("stopping....");
 		running.set(false);
 	}
-	public synchronized SQSAdapter start() {
+
+	@SuppressWarnings("unchecked")
+	public synchronized <T extends SQSAdapter> T start() {
 		if (running.get()) {
 			logger.warn("already running");
-			return this;
+			return (T) this;
 		}
 
 		Preconditions.checkArgument(sqs != null, "SQSClient must be set");
@@ -279,21 +307,26 @@ public class SQSAdapter {
 						if (urlSupplier == null) {
 							throw new IllegalArgumentException("queueUrl or queueName must be set");
 						}
-
+						
 						rmr.setQueueUrl(urlSupplier.get());
 						ReceiveMessageResult result = sqs.receiveMessage(rmr);
 						List<Message> list = result.getMessages();
-
+						
 						if (list != null) {
 							for (Message message : list) {
 								try {
-									logger.info("received: {}", message.getMessageId());
+									messageReceiveCount.incrementAndGet();
+									if (logger.isDebugEnabled()) {
+										logger.debug("received: {}", message.getMessageId());
+									}
 									SQSMessage sqs = new SQSMessage();
 									sqs.message = message;
+									
 									publishSubject.onNext(sqs);
 									if (autoDelete) {
 										delete(message);
 									}
+									dispatchSuccessCount.incrementAndGet();
 									resetFailureCount();
 								} catch (Exception e) {
 									handleException(e);
@@ -309,13 +342,15 @@ public class SQSAdapter {
 			}
 		};
 
-		ThreadGroup tg = new ThreadGroup("SQSAdapter");
+		String threadGroupName = String.format("%s-%s", "SQSAdapter",
+				(Strings.isNullOrEmpty(name) ? Integer.toHexString(hashCode()) : name));
+		ThreadGroup tg = new ThreadGroup(threadGroupName);
 		Thread t = new Thread(tg, r);
 
 		t.setDaemon(true);
 		t.start();
 
-		return this;
+		return (T) this;
 	}
 
 	public void delete(Message m) {
@@ -326,7 +361,7 @@ public class SQSAdapter {
 	}
 
 	private void resetFailureCount() {
-		failureCount.set(0);
+		successiveFailureCount.set(0);
 	}
 
 	private void assertNotStarted() {
@@ -335,8 +370,8 @@ public class SQSAdapter {
 
 	protected void handleException(Exception e) {
 
-	
-		
+		successiveFailureCount.incrementAndGet();
+		totalFailureCount.incrementAndGet();
 		try {
 			String url = getQueueUrl();
 			logger.warn("problem receiving message from queue: " + url, e);
@@ -345,11 +380,9 @@ public class SQSAdapter {
 
 		}
 
-		
-
 		try {
-			
-			logger.info("sleeping for {}ms due to {} failures", getBackoffInterval(), failureCount.get());
+
+			logger.info("sleeping for {}ms due to {} failures", getBackoffInterval(), successiveFailureCount.get());
 			Thread.sleep(getBackoffInterval());
 		} catch (InterruptedException x) {
 		}
@@ -360,23 +393,37 @@ public class SQSAdapter {
 	public Observable<SQSMessage> getObservable() {
 		return publishSubject;
 	}
-	
+
 	/**
 	 * Connects this adapter to an EventBus that will receive messages.
+	 * 
 	 * @param bus
 	 * @return
 	 */
 	public SQSAdapter connectTo(EventBus bus) {
-		getObservable().subscribe(Consumers.safeConsumer(m -> {
+		getObservable().subscribe(ExceptionHandlers.safeConsumer(m -> {
 			bus.post(m);
 		}));
 		return this;
 	}
-	
+
 	protected long getBackoffInterval() {
 
-		return Math.min(Math.round(Math.pow(2, failureCount.getAndIncrement())) * backoffMutiplierMillis, TimeUnit.SECONDS.toMillis(60));
-		
+		return Math.min(Math.round(Math.pow(2, successiveFailureCount.getAndIncrement())) * backoffMutiplierMillis,
+				TimeUnit.SECONDS.toMillis(60));
+
+	}
 	
+	public AtomicLong getSuccesiveFailureCount() {
+		return successiveFailureCount;
+	}
+	public AtomicLong getTotalFailureCount() {
+		return totalFailureCount;
+	}
+	public AtomicLong getTotalMessagesReceivedCount() {
+		return messageReceiveCount;
+	}
+	public AtomicLong getTotalSuccessCount() {
+		return dispatchSuccessCount;
 	}
 }
