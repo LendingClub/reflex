@@ -8,7 +8,7 @@ Reflex is a set of utilities for working with [RxJava 2.x](https://github.com/Re
 
 
 * A binding to Guava's EventBus
-* ConcurrentConsumers class for parallelizing consumer execution
+* ConcurrentSubscribers class for parallelizing consumer execution
 * A set of convenience Predicates
 * AWS SQS Support
 
