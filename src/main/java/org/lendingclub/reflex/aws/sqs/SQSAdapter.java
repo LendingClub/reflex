@@ -1,8 +1,6 @@
 package org.lendingclub.reflex.aws.sqs;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,8 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
-import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
-import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
@@ -25,13 +21,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 public class SQSAdapter {
 
@@ -86,7 +81,7 @@ public class SQSAdapter {
 
 	static Logger logger = LoggerFactory.getLogger(SQSAdapter.class);
 
-	PublishSubject<SQSMessage> publishSubject = PublishSubject.create();
+	Subject<SQSMessage> subject;
 	Supplier<String> urlSupplier;
 	AmazonSQSClient sqs;
 	String queueName;
@@ -102,6 +97,10 @@ public class SQSAdapter {
 	AtomicLong dispatchSuccessCount = new AtomicLong(0);
 	AtomicLong totalFailureCount = new AtomicLong(0);
 	
+	public SQSAdapter() {
+		PublishSubject<SQSMessage> temp = PublishSubject.create();
+		this.subject = temp.toSerialized();
+	}
 	@SuppressWarnings("unchecked")
 	public <T extends SQSAdapter> T withSQSClient(AmazonSQSClient client) {
 
@@ -329,7 +328,7 @@ public class SQSAdapter {
 									SQSMessage sqs = new SQSMessage();
 									sqs.message = message;
 									
-									publishSubject.onNext(sqs);
+									subject.onNext(sqs);
 									if (autoDelete) {
 										delete(message);
 									}
@@ -398,7 +397,7 @@ public class SQSAdapter {
 	}
 
 	public Observable<SQSMessage> getObservable() {
-		return publishSubject;
+		return subject;
 	}
 
 	/**

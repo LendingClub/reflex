@@ -112,28 +112,37 @@ public class EventBusAdapterTest {
 	 */
 	@Test
 	public void testConcurrentEvents() throws InterruptedException {
-		ExecutorService x = Executors.newFixedThreadPool(5);
+		ExecutorService x = Executors.newFixedThreadPool(10);
 		try {
 			EventBus eventBus = new AsyncEventBus(x);
 			Observable<Object> observable = EventBusAdapter.toObservable(eventBus, String.class);
 
+			
 			int count = 10;
 			CountDownLatch latch = new CountDownLatch(count);
-			observable.subscribe(it -> {
+			observable.subscribeOn(Schedulers.newThread()).subscribe(it -> {
 				logger.info("subscriber " + it);
 				latch.countDown();
 				Thread.sleep(500);
 			});
+			
+			observable.subscribeOn(Schedulers.newThread()).subscribe(it -> {
+				logger.info("subscriber2 " + it);
+				latch.countDown();
+				Thread.sleep(500);
+			});
+			
 			long t0 = System.currentTimeMillis();
 			logger.info("start");
 			for (int i = 0; i < count; i++) {
 				eventBus.post("test " + i);
+				Thread.sleep(300);
 			}
 			Assertions.assertThat(latch.await(20, TimeUnit.SECONDS)).isTrue();
 			logger.info("stop");
 			long t1 = System.currentTimeMillis();
 
-			Assertions.assertThat(t1 - t0).isLessThan(3000);
+			Assertions.assertThat(t1 - t0).isLessThan(10000);
 		} finally {
 			x.shutdown();
 		}

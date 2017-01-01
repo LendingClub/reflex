@@ -1,26 +1,29 @@
 package org.lendingclub.reflex.queue;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.AllowConcurrentEvents;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
+import io.reactivex.exceptions.Exceptions;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 /**
  * WorkQueueObserver connects an Rx Observable to a bounded work queue and
@@ -37,7 +40,7 @@ public class WorkQueue<T> implements Observer<T> {
 	static AtomicInteger count = new AtomicInteger(0);
 
 	String name = "QueueSubscriber-" + (count.getAndIncrement()) + "-%d";
-	int queueSize = 1000;
+	int queueSize = 2048;
 	int coreThreadPoolSize = 1;
 	int maxThreadPoolSize = 1;
 	int time = 30;
@@ -46,8 +49,10 @@ public class WorkQueue<T> implements Observer<T> {
 	LinkedBlockingDeque<Runnable> queue;
 	ThreadPoolExecutor executor;
 	UncaughtExceptionHandler uncaughtExceptionHandler = null;
-	final PublishSubject<T> publishSubject = PublishSubject.create();
 
+
+	EventBus eventBus = new EventBus();
+	
 	public WorkQueue() {
 
 	}
@@ -107,7 +112,21 @@ public class WorkQueue<T> implements Observer<T> {
 	}
 
 	public Observable<T> getObservable() {
-		return publishSubject;
+		final Subject<T> subject = (Subject<T>) PublishSubject.create().toSerialized();
+		
+		
+		Object binding = new Object() {
+			
+			@Subscribe
+			@AllowConcurrentEvents
+			public void dispatch(T message) {
+				subject.onNext(message);
+			}
+		};
+
+		eventBus.register(binding);
+		
+		return subject;
 	}
 
 	protected synchronized void start() {
@@ -147,7 +166,7 @@ public class WorkQueue<T> implements Observer<T> {
 	@Override
 	public void onNext(T t) {
 
-		if (executor==null) {
+		if (executor == null) {
 			logger.warn("not started...onSubscribe() not called");
 			return;
 		}
@@ -156,14 +175,14 @@ public class WorkQueue<T> implements Observer<T> {
 			@Override
 			public void run() {
 
-				publishSubject.onNext(t);
+				eventBus.post(t);
+				
+
 			}
 
 		};
 
-		
 		executor.execute(r);
-		
 
 	}
 

@@ -10,22 +10,23 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import io.reactivex.Observable;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
-import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 public class EventBusAdapter<T> {
 
 	static Logger logger = LoggerFactory.getLogger(EventBusAdapter.class);
 	EventBus bus;
-	PublishSubject<T> publishSubject;
+
+	Subject<T> subject;
 	Observable<T> observableWithCounter;
+
 	AtomicLong counter = new AtomicLong();
-	
 	
 	Class<? extends Object> filterClass;
 
+	
 	class CounterFunction implements Function<T, T> {
 
 		@Override
@@ -55,8 +56,8 @@ public class EventBusAdapter<T> {
 		EventBusAdapter<T> emitter = new EventBusAdapter<T>();
 		emitter.filterClass = clazz;
 		emitter.bus = bus;
-		emitter.publishSubject = PublishSubject.create();
-		emitter.observableWithCounter = emitter.publishSubject.map(emitter.new CounterFunction());
+		emitter.subject = (Subject<T>) PublishSubject.create().toSerialized();
+		emitter.observableWithCounter = emitter.subject.map(emitter.new CounterFunction());
 		bus.register(emitter);
 
 		return emitter;
@@ -66,10 +67,10 @@ public class EventBusAdapter<T> {
 	@AllowConcurrentEvents
 	void receive(T obj) {
 
-		if (publishSubject != null) {
+		if (subject != null) {
 			if (obj != null && filterClass.isInstance(obj)) {
 				try {
-					publishSubject.onNext(obj);
+					subject.onNext(obj);
 				}
 				catch (RuntimeException e) {
 					logger.warn("problem",e);
