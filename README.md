@@ -35,27 +35,29 @@ As a convenience, it is possible to filter events into a type-safe Observable.
 Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.class);
 ```
 
-## Concurrent Consumers
+## Concurrent Subscribers
 
-It may be surprising, but reactive streams are inherently single-threaded.  The Observable Contract states that only one thread
-may call ```onNext()```. 
+It can seem surprising, but reactive streams are inherently single-threaded.  The Observable contract states that only one thread
+may call ```onNext()``` at any given time. 
 
-In many cases, you may have a heavy-weight Consumer that is compute or I/O-intensive.  Achieving Consumer parallelism with RxJava operators is
-not difficult, but it is very unintuitive.  What you need to understand is that it is *simply impossible* with a single Observable.  What you need
-to do is to create a new Observable sequence from within a ```flatMap``` operator.  This code ends up being a bit diffiuclt to understand.
+It is common to have a heavy-weight Consumer that is compute or I/O-intensive.  Achieving parallelism with RxJava operators is
+not difficult, but it is very unintuitive.
 
-ConcurrentConsumers to the rescue!
+What you need to understand is that it is *simply impossible* with a single Observable.  To accomplish this, you need to create a *new*
+Observable sequence from within a ```flatMap``` operator and emit the new Observable.  
+
+This code ends up being a bit diffiuclt to understand.
+
+ConcurrentSubscribers to the rescue!
 
 The following code prinnts out the values 0..4 in parallel, each within its own thread.
 
 ```java
-ConcurrentConsumers.subscribeParallel(
-    Observable.range(0, 5),
-    Schedulers.newThread(),
-    val -> {
+ConcurrentSubscribers.newConcurrentSubscriber(Observable.range(0, 10))
+    .withScheduler(Schedulers.newThread())
+    .subscribe(val -> {
         System.out.println("processing "+val+" in "+Thread.currentThread());
-    }
-);
+    });
 ```
 
 Output:
@@ -67,6 +69,27 @@ processing 2 in Thread[RxNewThreadScheduler-3,5,main]
 processing 1 in Thread[RxNewThreadScheduler-2,5,main]
 processing 3 in Thread[RxNewThreadScheduler-4,5,main]
 ```	
+
+ConcurrentScribers.newConcurrentSubscriber() is conveniently structured as a builder.  That builder is capable of contructed a bounded
+ThreadPoolExecutor.  In the following example we subscribe to an observable sequence, just like the prior example.  But in this example,
+the consumer executes in a newly constructed ThreadPoolExecutor that has 5 threads and bounded maximum queue size of 1024.
+
+```java
+ConcurrentSubscribers.newConcurrentSubscriber(Observable.range(0, 100))
+    .withNewExecutor(executorBuilder->{ 
+        executorBuilder
+        .withCorePoolSize(5)
+        .withMaxQueueSize(1024);
+    })
+    .subscribe(val -> {
+        System.out.println("processing "+val+" in "+Thread.currentThread());
+    }
+);
+```
+
+NOTE: It is your responsibility to shut down the newly-createed Executor if it is no longer needed.  If you don't, you will leak threads!
+In practice, it is expected that this model will be used when the source Observable never terminates.
+
 
 ## Convenience Predicates
 

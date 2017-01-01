@@ -11,7 +11,7 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Test;
-import org.lendingclub.reflex.concurrent.ConcurrentConsumers;
+import org.lendingclub.reflex.concurrent.ConcurrentSubscribers;
 import org.lendingclub.reflex.guava.EventBusAdapter;
 import org.lendingclub.reflex.predicate.Predicates;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class EventBusAdapterTest {
 
 		AtomicReference<Thread> workerThread = new AtomicReference<Thread>(null);
 		CountDownLatch latch = new CountDownLatch(count*2);
-		ConcurrentConsumers.subscribeParallel(emitter.getObservable(), executor,c -> {
+		ConcurrentSubscribers.subscribeParallel(emitter.getObservable(), executor,c -> {
 			logger.info("foo " + c);
 			Thread.sleep(300);
 			latch.countDown();
@@ -120,13 +120,13 @@ public class EventBusAdapterTest {
 			int count = 100;
 			CountDownLatch latch = new CountDownLatch(count);
 			
-			ConcurrentConsumers.subscribeParallel(observable1, x, it -> {
+			ConcurrentSubscribers.subscribeParallel(observable1, x, it -> {
 				logger.info("subscriber " + it);
 				latch.countDown();
 				Thread.sleep(50);
 			});
 			
-			ConcurrentConsumers.subscribeParallel(observable2, x, it -> {
+			ConcurrentSubscribers.subscribeParallel(observable2, x, it -> {
 				logger.info("subscriber2 " + it);
 				latch.countDown();
 				Thread.sleep(30);

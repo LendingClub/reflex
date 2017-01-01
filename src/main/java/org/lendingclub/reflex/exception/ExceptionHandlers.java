@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.Exceptions;
+import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
 import io.reactivex.observers.SafeObserver;
 
@@ -17,23 +18,23 @@ public class ExceptionHandlers {
 		return safeConsumer(consumer, LoggerFactory.getLogger(consumer.getClass()));
 	}
 
-	public  static interface UncaughtExceptionHandler {
-		public void handleException(Throwable t, Object x);
+	public  static interface UncaughtSubscriberExceptionHandler extends BiConsumer<Throwable, Object> {
+		
 	}
-	public static class ExceptionLogger<T>  implements UncaughtExceptionHandler {
+	public static class ExceptionLogger<T>  implements UncaughtSubscriberExceptionHandler {
 
 		Logger log;
 		ExceptionLogger(Logger log) {
 			this.log = log;
 		}
 		@Override
-		public void handleException(Throwable t1, Object t2)  {
+		public void accept(Throwable t1, Object t2)  {
 			log.warn("problem processing element",t1);
 		
 		}
 		
 	}
-	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer, UncaughtExceptionHandler h) {
+	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer, UncaughtSubscriberExceptionHandler h) {
 		Consumer<T> wrapper = new Consumer<T>() {
 
 		
@@ -44,7 +45,7 @@ public class ExceptionHandlers {
 				} catch (Throwable e) {
 					Exceptions.throwIfFatal(e);
 					try {
-						h.handleException(e,t);
+						h.accept(e,t);
 					} catch (Throwable x) {
 						Exceptions.throwIfFatal(e);
 						logger.warn("problem with exception handler",e);
@@ -69,7 +70,7 @@ public class ExceptionHandlers {
 	}
 
 
-	public static <T> Observer<T> safeObserver(final Observer<T> observer,  UncaughtExceptionHandler handlerFunction) {
+	public static <T> Observer<T> safeObserver(final Observer<T> observer,  UncaughtSubscriberExceptionHandler handlerFunction) {
 
 		Observer<T> wrapper = new Observer<T>() {
 			Observer<T> x = observer;
@@ -86,7 +87,7 @@ public class ExceptionHandlers {
 				} catch (Throwable e) {
 					Exceptions.throwIfFatal(e);
 					try {
-						handlerFunction.handleException(e,t);
+						handlerFunction.accept(e,t);
 					} catch (Throwable x) {
 						Exceptions.throwIfFatal(e);
 						

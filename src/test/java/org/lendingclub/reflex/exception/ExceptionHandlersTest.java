@@ -5,7 +5,7 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.lendingclub.reflex.exception.ExceptionHandlers;
-import org.lendingclub.reflex.exception.ExceptionHandlers.UncaughtExceptionHandler;
+import org.lendingclub.reflex.exception.ExceptionHandlers.UncaughtSubscriberExceptionHandler;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
@@ -60,18 +60,17 @@ public class ExceptionHandlersTest {
 		Observable.range(0, 5).subscribe(ExceptionHandlers.safeObserver(x, LoggerFactory.getLogger("foo")));	
 		Assertions.assertThat(list).containsExactly(0,1,2,4);
 		
-		UncaughtExceptionHandler handler = new UncaughtExceptionHandler() {
+		UncaughtSubscriberExceptionHandler handler = new UncaughtSubscriberExceptionHandler() {
 			
-	
+
 
 			@Override
-			public void handleException(Throwable t1, Object t2) {
-				
-			
-				System.out.println(t1 +" "+t2);
-			
+			public void accept(Throwable t1, Object t2) throws Exception {
+				// TODO Auto-generated method stub
 				
 			}
+
+		
 			
 		};
 		list.clear();
@@ -79,12 +78,12 @@ public class ExceptionHandlersTest {
 		Assertions.assertThat(list).containsExactly(0,1,2,4);
 		
 		
-		UncaughtExceptionHandler brokenHandler = new UncaughtExceptionHandler() {
+		UncaughtSubscriberExceptionHandler brokenHandler = new UncaughtSubscriberExceptionHandler() {
 			
 			
 
 			@Override
-			public void handleException(Throwable t1, Object t2) {
+			public void accept(Throwable t1, Object t2) {
 				
 			
 				throw new RuntimeException("broken handler!");
