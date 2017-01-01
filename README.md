@@ -37,7 +37,7 @@ Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.
 
 ## Concurrent Consumers
 
-It may be surprising, but reactive streams are inherenty single-threaded.  The Observable Contract states that only one thread
+It may be surprising, but reactive streams are inherently single-threaded.  The Observable Contract states that only one thread
 may call ```onNext()```. 
 
 In many cases, you may have a heavy-weight Consumer that is compute or I/O-intensive.  Achieving Consumer parallelism with RxJava operators is
