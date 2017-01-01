@@ -8,7 +8,7 @@ Reflex is a set of utilities for working with [RxJava 2.x](https://github.com/Re
 
 
 * A binding to Guava's EventBus
-* A bounded work queue implemented as Observables
+* ConcurrentConsumers class for parallelizing consumer execution
 * A set of convenience Predicates
 * AWS SQS Support
 
@@ -35,34 +35,38 @@ As a convenience, it is possible to filter events into a type-safe Observable.
 Observable<MyEvent> observable = EventBusAdapter.toObservable(eventBus, MyEvent.class);
 ```
 
-## Bounded Work Queue
+## Concurrent Consumers
 
+It may be surprising, but reactive streams are inherenty single-threaded.  The Observable Contract states that only one thread
+may call ```onNext()```. 
 
-Sometimes it can be hard to reason with the Reactive threading model.  [WorkQueue](src/main/java/org/lendingclub/rx/queue/WorkQueue.java) provides a simple way to put a BlockingQueue/ThreadPoolExecutor 
-between a source Observable and an Observable that acts as the worker.  It may go against the [Reactive Manifesto](http://www.reactivemanifesto.org/), but this is simple and clear.  With the reactive Schedulers, ```subscribeOn```, and ```observeOn``` it is not always so clear what is happening, so mistakes are easy to make.
+In many cases, you may have a heavy-weight Consumer that is compute or I/O-intensive.  Achieving Consumer parallelism with RxJava operators is
+not difficult, but it is very unintuitive.  What you need to understand is that it is *simply impossible* with a single Observable.  What you need
+to do is to create a new Observable sequence from within a ```flatMap``` operator.  This code ends up being a bit diffiuclt to understand.
 
+ConcurrentConsumers to the rescue!
 
-In the following example, the Observable consisting of the range of values [0..99] is subscribed-to by a work queue the processes the values in sequence in a separate thread:
-
-```java
-WorkQueue<Integer> queue = new WorkQueue<Integer>();
-
-queue.getObservable().subscribe(it -> {
-    System.out.println("processing "+it+" in "+Thread.currentThread());
-});
-    
-Observable.range(0, 100).subscribe(queue);
-```
-
-WorkQueueObserver exposes a number of options availbale on the underlying Executor, such as the queue size, the RejectedExecutionHandler policy, the concurrency in the thread pool, etc.:
+The following code prinnts out the values 0..4 in parallel, each within its own thread.
 
 ```java
-WorkQueue<Integer> queue = new WorkQueue<Integer>()
-    .withCoreThreadPoolSize(5)
-    .withQueueSize(5000)
-    .withThreadName("my-thread-%d")
-    .withThreadTimeout(30, TimeUnit.SECONDS);
+ConcurrentConsumers.subscribeParallel(
+    Observable.range(0, 5),
+    Schedulers.newThread(),
+    val -> {
+        System.out.println("processing "+val+" in "+Thread.currentThread());
+    }
+);
 ```
+
+Output:
+
+```bash
+processing 0 in Thread[RxNewThreadScheduler-1,5,main]
+processing 4 in Thread[RxNewThreadScheduler-5,5,main]
+processing 2 in Thread[RxNewThreadScheduler-3,5,main]
+processing 1 in Thread[RxNewThreadScheduler-2,5,main]
+processing 3 in Thread[RxNewThreadScheduler-4,5,main]
+```	
 
 ## Convenience Predicates
 

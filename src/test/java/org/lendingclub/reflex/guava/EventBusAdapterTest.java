@@ -11,9 +11,9 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Test;
+import org.lendingclub.reflex.concurrent.ConcurrentConsumers;
 import org.lendingclub.reflex.guava.EventBusAdapter;
 import org.lendingclub.reflex.predicate.Predicates;
-import org.lendingclub.reflex.queue.WorkQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,21 +42,19 @@ public class EventBusAdapterTest {
 	@Test
 	public void test() throws InterruptedException {
 		int count = 10;
-		executor = Executors.newFixedThreadPool(10);
+		executor = Executors.newFixedThreadPool(1);
 		
 		EventBus bus = new AsyncEventBus(executor);
 
 		List<String> stringList = Lists.newArrayList();
 
-		EventBusAdapter emitter = EventBusAdapter.createAdapter(bus, Object.class);
+		EventBusAdapter<String> emitter = EventBusAdapter.createAdapter(bus, String.class);
 
-		WorkQueue<Object> qs = new WorkQueue<>();
-
-		emitter.getObservable().subscribe(qs);
+	
 
 		AtomicReference<Thread> workerThread = new AtomicReference<Thread>(null);
 		CountDownLatch latch = new CountDownLatch(count*2);
-		Disposable x = qs.getObservable().subscribe(c -> {
+		ConcurrentConsumers.subscribeParallel(emitter.getObservable(), executor,c -> {
 			logger.info("foo " + c);
 			Thread.sleep(300);
 			latch.countDown();
@@ -115,28 +113,30 @@ public class EventBusAdapterTest {
 		ExecutorService x = Executors.newFixedThreadPool(10);
 		try {
 			EventBus eventBus = new AsyncEventBus(x);
-			Observable<Object> observable = EventBusAdapter.toObservable(eventBus, String.class);
+			Observable<Object> observable1 = EventBusAdapter.toObservable(eventBus, String.class);
+			Observable<Object> observable2 = EventBusAdapter.toObservable(eventBus, String.class);
 
 			
-			int count = 10;
+			int count = 100;
 			CountDownLatch latch = new CountDownLatch(count);
-			observable.subscribeOn(Schedulers.newThread()).subscribe(it -> {
+			
+			ConcurrentConsumers.subscribeParallel(observable1, x, it -> {
 				logger.info("subscriber " + it);
 				latch.countDown();
-				Thread.sleep(500);
+				Thread.sleep(50);
 			});
 			
-			observable.subscribeOn(Schedulers.newThread()).subscribe(it -> {
+			ConcurrentConsumers.subscribeParallel(observable2, x, it -> {
 				logger.info("subscriber2 " + it);
 				latch.countDown();
-				Thread.sleep(500);
+				Thread.sleep(30);
 			});
 			
 			long t0 = System.currentTimeMillis();
 			logger.info("start");
 			for (int i = 0; i < count; i++) {
 				eventBus.post("test " + i);
-				Thread.sleep(300);
+		
 			}
 			Assertions.assertThat(latch.await(20, TimeUnit.SECONDS)).isTrue();
 			logger.info("stop");

@@ -10,6 +10,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import io.reactivex.Observable;
+import io.reactivex.exceptions.Exceptions;
 import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
@@ -50,7 +51,8 @@ public class EventBusAdapter<T> {
 		return createAdapter(bus,Object.class);
 	}
 	
-	public static <T> EventBusAdapter<? extends T> createAdapter(EventBus bus, Class<? extends T> clazz) {
+	@SuppressWarnings("unchecked")
+	public static <T> EventBusAdapter<T> createAdapter(EventBus bus, Class<? extends T> clazz) {
 
 		logger.info("creating adapter for eventBus={} type={}",bus,clazz);
 		EventBusAdapter<T> emitter = new EventBusAdapter<T>();
@@ -72,7 +74,8 @@ public class EventBusAdapter<T> {
 				try {
 					subject.onNext(obj);
 				}
-				catch (RuntimeException e) {
+				catch (Throwable e) {
+					Exceptions.throwIfFatal(e);
 					logger.warn("problem",e);
 				}
 			}
