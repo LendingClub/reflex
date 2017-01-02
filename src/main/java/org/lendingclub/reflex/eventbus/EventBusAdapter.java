@@ -1,4 +1,4 @@
-package org.lendingclub.reflex.guava;
+package org.lendingclub.reflex.eventbus;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -42,7 +42,7 @@ public class EventBusAdapter<T> {
 		return (Observable<T>) createAdapter(bus, clazz).getObservable();
 	}
 	
-	@SuppressWarnings("unchecked")
+
 	public static  Observable<Object> toObservable(EventBus bus) {
 		return (Observable<Object>) createAdapter(bus, Object.class).getObservable();
 	}

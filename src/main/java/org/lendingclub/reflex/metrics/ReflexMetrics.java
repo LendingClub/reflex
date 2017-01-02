@@ -4,7 +4,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.lendingclub.reflex.aws.sqs.SQSAdapter;
-import org.lendingclub.reflex.guava.EventBusAdapter;
+import org.lendingclub.reflex.eventbus.EventBusAdapter;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;

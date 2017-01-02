@@ -1,4 +1,4 @@
-package org.lendingclub.reflex.exception;
+package org.lendingclub.reflex.eventbus;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.CountDownLatch;

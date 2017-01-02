@@ -1,4 +1,4 @@
-package org.lendingclub.reflex.exception;
+package org.lendingclub.reflex.operator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

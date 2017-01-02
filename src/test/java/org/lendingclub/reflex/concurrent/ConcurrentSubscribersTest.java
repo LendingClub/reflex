@@ -91,6 +91,8 @@ public class ConcurrentSubscribersTest {
 			latch.countDown();
 		});
 		
+		
+		
 		Assertions.assertThat(latch.await(30, TimeUnit.SECONDS)).isTrue();
 		
 		ThreadPoolExecutor.class.cast(x.getExecutor().get()).shutdown();

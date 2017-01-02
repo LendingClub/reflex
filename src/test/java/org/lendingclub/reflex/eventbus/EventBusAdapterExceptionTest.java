@@ -1,4 +1,4 @@
-package org.lendingclub.reflex.exception;
+package org.lendingclub.reflex.eventbus;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Test;
-import org.lendingclub.reflex.guava.EventBusAdapter;
+import org.lendingclub.reflex.eventbus.EventBusAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

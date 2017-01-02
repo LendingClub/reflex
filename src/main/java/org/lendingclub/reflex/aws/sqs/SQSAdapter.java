@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.lendingclub.reflex.exception.ExceptionHandlers;
+import org.lendingclub.reflex.operator.ExceptionHandlers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +15,7 @@ import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -31,7 +32,7 @@ import io.reactivex.subjects.Subject;
 public class SQSAdapter {
 
 	static ObjectMapper mapper = new ObjectMapper();
-	
+
 	public class SQSMessage {
 		Message message;
 
@@ -48,7 +49,6 @@ public class SQSAdapter {
 		}
 	}
 
-    
 	public static class SQSUrlSupplier implements Supplier<String> {
 
 		private String queueUrl;
@@ -96,11 +96,12 @@ public class SQSAdapter {
 	AtomicLong messageReceiveCount = new AtomicLong(0);
 	AtomicLong dispatchSuccessCount = new AtomicLong(0);
 	AtomicLong totalFailureCount = new AtomicLong(0);
-	
+
 	public SQSAdapter() {
 		PublishSubject<SQSMessage> temp = PublishSubject.create();
 		this.subject = temp.toSerialized();
 	}
+
 	@SuppressWarnings("unchecked")
 	public <T extends SQSAdapter> T withSQSClient(AmazonSQSClient client) {
 
@@ -249,20 +250,47 @@ public class SQSAdapter {
 		return (T) this;
 	}
 
-	public static class SQSJsonMessageExtractor implements Function<SQSMessage, Observable<JsonNode>> {
+	public static SQSJsonMessageExtractor newJsonMessageExtractor() {
+		return new SQSJsonMessageExtractor();
+	}
+
+	public static class SQSJsonMessageExtractor implements Function<Object, Observable<JsonNode>> {
 
 		@Override
-		public Observable<JsonNode> apply(SQSMessage t) throws Exception {
-			try {
-				String data = t.getMessage().getBody();
-				JsonNode n = mapper.readTree(data);
-				if (n.path("Type").asText().equals("Notification")) {
-					n = mapper.readTree(n.path("Message").asText());
+		public Observable<JsonNode> apply(Object t) throws Exception {
+
+			JsonNode result = null;
+			if (t instanceof SQSMessage) {
+				try {
+					SQSMessage m = (SQSMessage) t;
+					String data = m.getMessage().getBody();
+					result = mapper.readTree(data);
+					if (result.path("Type").asText().equals("Notification") && result.has("Message")) {
+						result = mapper.readTree(result.path("Message").asText());
+					}
+					return Observable.just(result);
 				}
-				return Observable.just(n);
-			} catch (Exception e) {
-				logger.warn("problem parsing message from queue: " + t.getSQSAdapter().getQueueUrl(), e);
+				catch (JsonParseException e) {
+					logger.debug("could not parse",e);
+					if (result==null) {
+						return Observable.empty();
+					}
+					else {
+						return Observable.just(result);
+					}
+				}
+				catch (Exception e) {
+					if (t instanceof SQSMessage) {
+						logger.warn("problem parsing message from queue: "
+								+ SQSMessage.class.cast(t).getSQSAdapter().getQueueUrl(), e);
+					} else {
+						logger.warn("problem reading message", e);
+					}
+				}
+			} else {
+				return Observable.empty();
 			}
+
 			return Observable.empty();
 		}
 
@@ -313,11 +341,11 @@ public class SQSAdapter {
 						if (urlSupplier == null) {
 							throw new IllegalArgumentException("queueUrl or queueName must be set");
 						}
-						
+
 						rmr.setQueueUrl(urlSupplier.get());
 						ReceiveMessageResult result = sqs.receiveMessage(rmr);
 						List<Message> list = result.getMessages();
-						
+
 						if (list != null) {
 							for (Message message : list) {
 								try {
@@ -327,7 +355,7 @@ public class SQSAdapter {
 									}
 									SQSMessage sqs = new SQSMessage();
 									sqs.message = message;
-									
+
 									subject.onNext(sqs);
 									if (autoDelete) {
 										delete(message);
@@ -419,20 +447,23 @@ public class SQSAdapter {
 				TimeUnit.SECONDS.toMillis(60));
 
 	}
-	
+
 	public AmazonSQSClient getSQSClient() {
 		return sqs;
 	}
-	
+
 	public AtomicLong getSuccesiveFailureCount() {
 		return successiveFailureCount;
 	}
+
 	public AtomicLong getTotalFailureCount() {
 		return totalFailureCount;
 	}
+
 	public AtomicLong getTotalMessagesReceivedCount() {
 		return messageReceiveCount;
 	}
+
 	public AtomicLong getTotalSuccessCount() {
 		return dispatchSuccessCount;
 	}

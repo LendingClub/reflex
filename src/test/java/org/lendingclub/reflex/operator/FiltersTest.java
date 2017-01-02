@@ -1,10 +1,8 @@
-package org.lendingclub.reflex.predicate;
+package org.lendingclub.reflex.operator;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
-import org.lendingclub.reflex.predicate.FlatMapFilters;
-import org.lendingclub.reflex.predicate.Predicates;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.reactivex.Observable;
 
-public class PredicatesTest {
+public class FiltersTest {
 
 	ObjectMapper mapper = new ObjectMapper();
 
@@ -20,10 +18,10 @@ public class PredicatesTest {
 	public void testIt() {
 
 		Assertions.assertThat(Lists.newArrayList(
-				Observable.just(1, "2", 33.3, "4").filter(Predicates.type(String.class)).blockingIterable()))
+				Observable.just(1, "2", 33.3, "4").filter(Filters.type(String.class)).blockingIterable()))
 				.containsExactly("2", "4");
 		Assertions.assertThat(Lists.newArrayList(
-				Observable.just(1, "2", 33.3, "4").filter(Predicates.type(Integer.class)).blockingIterable()))
+				Observable.just(1, "2", 33.3, "4").filter(Filters.type(Integer.class)).blockingIterable()))
 				.containsExactly(1);
 	}
 
@@ -37,7 +35,7 @@ public class PredicatesTest {
 			return json.path("foo").asText().equals("bar");
 		}));
 
-		Assertions.assertThat(((JsonNode) Observable.just(n0, n1).filter(Predicates.json(x -> {
+		Assertions.assertThat(((JsonNode) Observable.just(n0, n1).filter(Filters.json(x -> {
 			return x.path("fizz").asText().equals("buzz");
 		})).blockingFirst()).path("fizz").asText()).isEqualTo("buzz");
 

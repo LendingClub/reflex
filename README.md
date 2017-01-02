@@ -93,16 +93,16 @@ In practice, it is expected that this model will be used when the source Observa
 
 ## Convenience Predicates
 
-The [Predicates](src/main/java/org/lendingclub/reflex/predicate/Predicates.java) class has a convenience method that applies Jackson's fluent path evaluation as a predicate.
+The [Filters](src/main/java/org/lendingclub/reflex/operators/Filters.java) class has a convenience method that applies Jackson's fluent path evaluation as a predicate.
 
 The following will filter out only Jacckson JsonNode objects that have a ```foo``` attribute with a value of ```bar```:
 
 ```java
 JsonNode data = ...;
 
-Observable.just(data).filter(Predicates.json(json -> {
+Observable.just(data).filter(Filters.json(json -> {
     return json.path("foo").asText().equals("bar");
-}));
+})).subscribe(System.out::println);
 ```
 
 It can sometimes be more convenient to filter with ```flatMap```, which does type conversion.
@@ -110,7 +110,7 @@ It can sometimes be more convenient to filter with ```flatMap```, which does typ
 ```java
 Observable.just(n0).flatMap(FlatMapFilters.json(json -> {
     return json.path("foo").asText().equals("bar");
-}));
+})).subscribe(System.out::println);
 ```
 
 ## AWS Simple Queue Service (SQS) Support
@@ -125,9 +125,8 @@ SQSAdapter adapter = new SQSAdapter()
     .withSQSClient(client)
     .withQueueUrl("https://sqs.us-west-2.amazonaws.com/123456789012/myqueue");
 
-adapter.getObservable().flatMap(new SQSAdapter.SQSJsonMessageExtractor()).subscribe(c -> {
-    System.out.println(c);
-});
+adapter.getObservable().flatMap(new SQSAdapter.SQSJsonMessageExtractor())
+ .subscribe( System.out::println );
 
 adapter.start();
 ```

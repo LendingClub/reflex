@@ -1,4 +1,4 @@
-package org.lendingclub.reflex.guava;
+package org.lendingclub.reflex.eventbus;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -12,8 +12,7 @@ import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Test;
 import org.lendingclub.reflex.concurrent.ConcurrentSubscribers;
-import org.lendingclub.reflex.guava.EventBusAdapter;
-import org.lendingclub.reflex.predicate.Predicates;
+import org.lendingclub.reflex.eventbus.EventBusAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,10 +20,6 @@ import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 
 public class EventBusAdapterTest {
 
