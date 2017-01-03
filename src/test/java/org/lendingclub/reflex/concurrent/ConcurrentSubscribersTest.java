@@ -82,7 +82,7 @@ public class ConcurrentSubscribersTest {
 		CountDownLatch latch = new CountDownLatch( count);
 		ConcurrentSubscriber<Integer> x = ConcurrentSubscribers.createConcurrentSubscriber(Observable.range(0, count))
 		.withNewExecutor(b->{
-			b.withCorePoolSize(5)
+			b.withThreadPoolSize(5)
 			.withMaxQueueSize(1024);
 		})
 	
@@ -109,7 +109,7 @@ public class ConcurrentSubscribersTest {
 		CountDownLatch latch = new CountDownLatch(count-10);
 		ConcurrentSubscribers.createConcurrentSubscriber(p)
 		.withNewExecutor(builder -> {
-			builder.withCorePoolSize(5);
+			builder.withThreadPoolSize(5);
 		})
 		
 		.subscribe(val -> {
