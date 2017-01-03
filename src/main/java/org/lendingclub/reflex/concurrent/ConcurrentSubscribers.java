@@ -145,9 +145,8 @@ public class ConcurrentSubscribers {
 		}
 	}
 
-	public static <T> ConcurrentSubscriber<T> newConcurrentSubscriber(Observable<T> source) {
-
+	public static <T> ConcurrentSubscriber<T> createConcurrentSubscriber(Observable<T> source) {
 		return new ConcurrentSubscriber<>(source);
-
 	}
+	
 }

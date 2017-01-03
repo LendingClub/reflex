@@ -3,6 +3,8 @@ package org.lendingclub.reflex.operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.exceptions.Exceptions;
@@ -13,65 +15,95 @@ import io.reactivex.observers.SafeObserver;
 public class ExceptionHandlers {
 
 	static Logger logger = LoggerFactory.getLogger(ExceptionHandlers.class);
+
 	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer) {
 
 		return safeConsumer(consumer, LoggerFactory.getLogger(consumer.getClass()));
 	}
 
-	public  static interface UncaughtSubscriberExceptionHandler extends BiConsumer<Throwable, Object> {
-		
-	}
-	public static class ExceptionLogger<T>  implements UncaughtSubscriberExceptionHandler {
+	public static interface UncaughtSubscriberExceptionHandler extends BiConsumer<Throwable, Object> {
 
-		Logger log;
-		ExceptionLogger(Logger log) {
-			this.log = log;
+	}
+
+	public static class ExceptionSafeConsumer<T> implements Consumer<T> {
+
+		Consumer<T> actual;
+		UncaughtSubscriberExceptionHandler uncaughtHandler;
+
+		public ExceptionSafeConsumer(Consumer<T> actual, UncaughtSubscriberExceptionHandler handler) {
+			Preconditions.checkNotNull(actual);
+			this.actual = actual;
+			if (uncaughtHandler == null) {
+				uncaughtHandler = new ExceptionLogger(LoggerFactory.getLogger(actual.getClass()));
+			} else {
+				uncaughtHandler = handler;
+			}
+			Preconditions.checkNotNull(uncaughtHandler);
 		}
+
 		@Override
-		public void accept(Throwable t1, Object t2)  {
-			log.warn("problem processing element",t1);
-		
-		}
-		
-	}
-	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer, UncaughtSubscriberExceptionHandler h) {
-		Consumer<T> wrapper = new Consumer<T>() {
-
-		
-			@Override
-			public void accept(T t) throws Exception {
+		public void accept(T t) throws Exception {
+			try {
+				actual.accept(t);
+			} catch (Throwable e) {
+				Exceptions.throwIfFatal(e);
 				try {
-					consumer.accept(t);
-				} catch (Throwable e) {
+					uncaughtHandler.accept(e, t);
+				} catch (Throwable x) {
 					Exceptions.throwIfFatal(e);
-					try {
-						h.accept(e,t);
-					} catch (Throwable x) {
-						Exceptions.throwIfFatal(e);
-						logger.warn("problem with exception handler",e);
-					}
+					logger.warn("problem with exception handler", e);
+					logger.warn("actual exception", e);
 				}
-
 			}
 
-		};
-		return wrapper;
+		}
+
+	}
+
+	public static class ExceptionLogger implements UncaughtSubscriberExceptionHandler {
+
+		Logger log;
+
+		ExceptionLogger(Logger log) {
+			Preconditions.checkNotNull(log);
+			this.log = log;
+		}
+
+		@Override
+		public void accept(Throwable t1, Object t2) {
+			log.warn("problem processing element", t2);
+		}
+
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T> Consumer<T> safeConsumer(Consumer<T> consumer, UncaughtSubscriberExceptionHandler h) {
+		return (Consumer<T>) new ExceptionSafeConsumer(consumer, h);
 	}
 
 	public static <T> Consumer<T> safeConsumer(Consumer<T> actual, Logger logger) {
 
-		return safeConsumer(actual,new ExceptionLogger<T>(logger));
+		return safeConsumer(actual, new ExceptionLogger(logger));
 	}
+
 	public static <T> Observer<T> safeObserver(Observer<T> observer) {
-		return safeObserver(observer, new ExceptionLogger<>(LoggerFactory.getLogger(observer.getClass())));
+		return safeObserver(observer, new ExceptionLogger(LoggerFactory.getLogger(observer.getClass())));
 	}
+
 	public static <T> Observer<T> safeObserver(Observer<T> observer, Logger logger) {
-		return safeObserver(observer, new ExceptionLogger<>(logger));
+		return safeObserver(observer, new ExceptionLogger(logger));
 	}
 
+	public static <T> Observer<T> safeObserver(final Observer<T> observer,
+			UncaughtSubscriberExceptionHandler handler) {
 
-	public static <T> Observer<T> safeObserver(final Observer<T> observer,  UncaughtSubscriberExceptionHandler handlerFunction) {
-
+		Preconditions.checkNotNull(observer);
+		if (handler == null) {
+			handler = new ExceptionLogger(LoggerFactory.getLogger(observer.getClass()));
+		}
+		
+		Preconditions.checkNotNull(handler);
+		final UncaughtSubscriberExceptionHandler exceptionHandler = handler;
 		Observer<T> wrapper = new Observer<T>() {
 			Observer<T> x = observer;
 
@@ -87,12 +119,13 @@ public class ExceptionHandlers {
 				} catch (Throwable e) {
 					Exceptions.throwIfFatal(e);
 					try {
-						handlerFunction.accept(e,t);
+
+						exceptionHandler.accept(e, t);
+
 					} catch (Throwable x) {
 						Exceptions.throwIfFatal(e);
-						
-						logger.warn("problem with exception handler",x);
-						logger.warn("actual exception",e);
+						logger.warn("problem with exception handler", x);
+						logger.warn("actual exception", e);
 					}
 				}
 
@@ -111,7 +144,7 @@ public class ExceptionHandlers {
 			}
 
 		};
-		return new SafeObserver(wrapper);
+		return new SafeObserver<T>(wrapper);
 	}
 
 }

@@ -53,7 +53,7 @@ ConcurrentSubscribers to the rescue!
 The following code prinnts out the values 0..4 in parallel, each within its own thread.
 
 ```java
-ConcurrentSubscribers.newConcurrentSubscriber(Observable.range(0, 10))
+ConcurrentSubscribers.createConcurrentSubscriber(Observable.range(0, 10))
     .withScheduler(Schedulers.newThread())
     .subscribe(val -> {
         System.out.println("processing "+val+" in "+Thread.currentThread());
@@ -75,7 +75,7 @@ ThreadPoolExecutor.  In the following example we subscribe to an observable sequ
 the consumer executes in a newly constructed ThreadPoolExecutor that has 5 threads and bounded maximum queue size of 1024.
 
 ```java
-ConcurrentSubscribers.newConcurrentSubscriber(Observable.range(0, 100))
+ConcurrentSubscribers.createConcurrentSubscriber(Observable.range(0, 100))
     .withNewExecutor(executorBuilder->{ 
         executorBuilder
         .withCorePoolSize(5)

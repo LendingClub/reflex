@@ -67,7 +67,7 @@ public class ConcurrentSubscribersTest {
 	@Test
 	public void testIt() {
 		
-		ConcurrentSubscribers.newConcurrentSubscriber(Observable.range(0, 10))
+		ConcurrentSubscribers.createConcurrentSubscriber(Observable.range(0, 10))
 		.withScheduler(Schedulers.newThread())
 		.subscribe(val -> {
 			System.out.println("processing "+val+" in "+Thread.currentThread());
@@ -80,7 +80,7 @@ public class ConcurrentSubscribersTest {
 		
 		int count = 100;
 		CountDownLatch latch = new CountDownLatch( count);
-		ConcurrentSubscriber<Integer> x = ConcurrentSubscribers.newConcurrentSubscriber(Observable.range(0, count))
+		ConcurrentSubscriber<Integer> x = ConcurrentSubscribers.createConcurrentSubscriber(Observable.range(0, count))
 		.withNewExecutor(b->{
 			b.withCorePoolSize(5)
 			.withMaxQueueSize(1024);
@@ -107,7 +107,7 @@ public class ConcurrentSubscribersTest {
 		Subject<Integer> p = PublishSubject.create();
 		p = p.toSerialized();
 		CountDownLatch latch = new CountDownLatch(count-10);
-		ConcurrentSubscribers.newConcurrentSubscriber(p)
+		ConcurrentSubscribers.createConcurrentSubscriber(p)
 		.withNewExecutor(builder -> {
 			builder.withCorePoolSize(5);
 		})
