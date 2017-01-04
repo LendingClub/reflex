@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.reactivex.functions.Consumer;
@@ -21,8 +22,8 @@ public class ReflexExecutors {
 		public static int DEFAULT_QUEUE_SIZE = 4096;
 		public static int DEFAULT_KEEP_ALIVE_TIMEOUT_SECS = 30;
 
-		int corePoolSize = DEFAULT_THREAD_POOL_SIZE;
-		int maxPoolSize = DEFAULT_THREAD_POOL_SIZE;
+		int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
+		
 		int maxQueueSize = DEFAULT_QUEUE_SIZE;
 
 		int keepAliveTime = DEFAULT_KEEP_ALIVE_TIMEOUT_SECS;
@@ -40,13 +41,9 @@ public class ReflexExecutors {
 
 		}
 
-		public ThreadPoolExecutorBuilder withCorePoolSize(int count) {
-			this.corePoolSize = count;
-			return this;
-		}
-
-		public ThreadPoolExecutorBuilder withMaxPoolSize(int count) {
-			this.maxPoolSize = count;
+		public ThreadPoolExecutorBuilder withThreadPoolSize(int count) {
+			Preconditions.checkArgument(count>0,"thread pool size must be >0");
+			this.threadPoolSize = count;
 			return this;
 		}
 
@@ -96,11 +93,11 @@ public class ReflexExecutors {
 			LinkedBlockingDeque<Runnable> queue = new LinkedBlockingDeque<>(maxQueueSize);
 
 
-			maxPoolSize = Math.max(maxPoolSize, corePoolSize);
+			
 
 			ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-					corePoolSize,
-					maxPoolSize,
+					threadPoolSize,
+					threadPoolSize,
 					keepAliveTime,
 					keepAliveTimeUnit,
 					queue,

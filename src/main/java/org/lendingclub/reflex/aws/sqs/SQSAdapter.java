@@ -23,8 +23,10 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.reactivex.Observable;
+import io.reactivex.exceptions.Exceptions;
 import io.reactivex.functions.Function;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
@@ -207,7 +209,7 @@ public class SQSAdapter {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends SQSAdapter> T withName(String name) {
+	public <T extends SQSAdapter> T withAdapterName(String name) {
 		this.name = name;
 		return (T) this;
 	}
@@ -269,17 +271,14 @@ public class SQSAdapter {
 						result = mapper.readTree(result.path("Message").asText());
 					}
 					return Observable.just(result);
-				}
-				catch (JsonParseException e) {
-					logger.debug("could not parse",e);
-					if (result==null) {
+				} catch (JsonParseException e) {
+					logger.debug("could not parse", e);
+					if (result == null) {
 						return Observable.empty();
-					}
-					else {
+					} else {
 						return Observable.just(result);
 					}
-				}
-				catch (Exception e) {
+				} catch (Exception e) {
 					if (t instanceof SQSMessage) {
 						logger.warn("problem parsing message from queue: "
 								+ SQSMessage.class.cast(t).getSQSAdapter().getQueueUrl(), e);
@@ -368,7 +367,8 @@ public class SQSAdapter {
 							}
 						}
 
-					} catch (Exception e) {
+					} catch (Throwable e) {
+						Exceptions.throwIfFatal(e);
 						handleException(e);
 					}
 				}
@@ -376,12 +376,13 @@ public class SQSAdapter {
 			}
 		};
 
-		String threadGroupName = String.format("%s-%s", "SQSAdapter",
-				(Strings.isNullOrEmpty(name) ? Integer.toHexString(hashCode()) : name));
-		ThreadGroup tg = new ThreadGroup(threadGroupName);
-		Thread t = new Thread(tg, r);
+		String threadNameFormat = String.format("%s-%s", "SQSAdapter",
+				(Strings.isNullOrEmpty(name) ? Integer.toHexString(hashCode()) : name)) + "-%d";
 
-		t.setDaemon(true);
+		ThreadFactoryBuilder tfb = new ThreadFactoryBuilder().setDaemon(true).setNameFormat(threadNameFormat);
+
+		Thread t = tfb.build().newThread(r);
+		logger.info("starting thread: {}", t);
 		t.start();
 
 		return (T) this;
@@ -402,7 +403,7 @@ public class SQSAdapter {
 		Preconditions.checkState(running.get() == false, "start() already called");
 	}
 
-	protected void handleException(Exception e) {
+	protected void handleException(Throwable e) {
 
 		successiveFailureCount.incrementAndGet();
 		totalFailureCount.incrementAndGet();

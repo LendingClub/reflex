@@ -16,8 +16,7 @@ public class ReflexExecutorsTest {
 
 		// Con
 		ThreadPoolExecutor tpe = ReflexExecutors.newThreadPoolExecutorBuilder()
-				.withCorePoolSize(2)
-				.withMaxPoolSize(2)
+				.withThreadPoolSize(2)
 				.withKeepAliveTime(10, TimeUnit.SECONDS)
 				.withMaxQueueSize(100)
 				.withThreadNameFormat("Test-%d")
@@ -48,23 +47,24 @@ public class ReflexExecutorsTest {
 	@Test
 	public void testCoreThreadTimeout() {
 		ThreadPoolExecutor x = ReflexExecutors
-				.newThreadPoolExecutorBuilder().withCoreThreadTimeout(true).withKeepAliveTime(5, TimeUnit.SECONDS).withCorePoolSize(10).build();
-	
+				.newThreadPoolExecutorBuilder().withCoreThreadTimeout(true).withKeepAliveTime(5, TimeUnit.SECONDS)
+				.withThreadPoolSize(10).build();
+
 		x.submit(() -> {
 		});
-		
-		boolean conditionSatisfied=false;
+
+		boolean conditionSatisfied = false;
 		long t0 = System.currentTimeMillis();
 		while ((!conditionSatisfied) && System.currentTimeMillis() - t0 < 60000) {
-			if (x.getPoolSize()==0) {
-				conditionSatisfied=true;
+			if (x.getPoolSize() == 0) {
+				conditionSatisfied = true;
 			}
 			try {
 				Thread.sleep(300);
 			} catch (Exception e) {
 			}
 		}
-		System.out.println(System.currentTimeMillis()-t0);
+		System.out.println(System.currentTimeMillis() - t0);
 		Assertions.assertThat(conditionSatisfied).isTrue();
 	}
 }
