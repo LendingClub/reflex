@@ -9,6 +9,7 @@ import org.lendingclub.reflex.concurrent.ReflexExecutors.ThreadPoolExecutorBuild
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
@@ -23,11 +24,8 @@ public class ReflexBus {
 		// TODO Auto-generated constructor stub
 	}
 
-	class Binding {
 
-	}
-
-	static class Builder {
+	public static class Builder {
 
 		AsyncEventBus builderEventBus;
 		Executor builderExecutor;
@@ -35,6 +33,9 @@ public class ReflexBus {
 		ThreadPoolExecutorBuilder threadPoolExecutorBuilder = ReflexExecutors.newThreadPoolExecutorBuilder();
 
 
+		protected Builder() {
+			
+		}
 		public Builder withExecutor(Executor executor) {
 			this.builderExecutor = executor;
 			return this;
@@ -105,5 +106,11 @@ public class ReflexBus {
 		eventBus.post(obj);
 	}
 	
-
+	public Executor getExecutor() {
+		return executor;
+	}
+	
+	public EventBus getGuavaEventBus() {
+		return eventBus;
+	}
 }
