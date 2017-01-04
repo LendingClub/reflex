@@ -52,7 +52,7 @@ public class ReflexExecutors {
 			return this;
 		}
 
-		public ThreadPoolExecutorBuilder withCoreThreadTimeout(boolean b) {
+		public ThreadPoolExecutorBuilder withThreadTimeout(boolean b) {
 			this.allowCoreThreadTimeout = b;
 			return this;
 		}

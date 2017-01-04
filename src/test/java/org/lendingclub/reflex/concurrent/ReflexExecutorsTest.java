@@ -47,7 +47,7 @@ public class ReflexExecutorsTest {
 	@Test
 	public void testCoreThreadTimeout() {
 		ThreadPoolExecutor x = ReflexExecutors
-				.newThreadPoolExecutorBuilder().withCoreThreadTimeout(true).withKeepAliveTime(5, TimeUnit.SECONDS)
+				.newThreadPoolExecutorBuilder().withThreadTimeout(true).withKeepAliveTime(5, TimeUnit.SECONDS)
 				.withThreadPoolSize(10).build();
 
 		x.submit(() -> {
