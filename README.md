@@ -1,3 +1,5 @@
+![Reflex](https://raw.githubusercontent.com/LendingClub/projector/master/.assets/noun_430142_sm.png) 
+
 # reflex
 
 [![CircleCI](https://circleci.com/gh/LendingClub/reflex.svg?style=svg)](https://circleci.com/gh/LendingClub/reflex)
