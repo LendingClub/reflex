@@ -1,4 +1,4 @@
-![Reflex](https://raw.githubusercontent.com/LendingClub/projector/master/.assets/noun_430142_sm.png) 
+![Reflex](https://raw.githubusercontent.com/LendingClub/reflex/master/.assets/noun_430142_sm.png) 
 
 # reflex
 
