@@ -97,4 +97,13 @@ public class SQSAdapterTest {
 		Assertions.assertThat(x.get(0).path("a").asText()).isEqualTo("1");
 		Assertions.assertThat(x.get(1).path("fizz").asText()).isEqualTo("buzz");
 	}
+	
+	@Test
+	public void testInitialRunState() {
+		SQSAdapter adapter = new SQSAdapter();
+		
+		Assertions.assertThat(adapter.runStateRef.get().get()).isTrue();
+		Assertions.assertThat(adapter.isRunning()).isFalse();
+		Assertions.assertThat(adapter.running.get()).isFalse();
+	}
 }
