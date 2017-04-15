@@ -7,8 +7,10 @@ import org.junit.Test;
 import org.lendingclub.reflex.aws.sqs.SQSAdapter.SQSMessage;
 import org.mockito.Mockito;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.codahale.metrics.MetricRegistry;
@@ -47,8 +49,8 @@ public class SQSAdapterTest {
 	@Test
 	public void testLazyFailure()  throws InterruptedException {
 	
-		
-		AmazonSQSClient client = new AmazonSQSClient(new BasicAWSCredentials("foo", "bar"));
+		AWSStaticCredentialsProvider cp = new AWSStaticCredentialsProvider(new BasicAWSCredentials("foo", "bar"));
+		AmazonSQSClient client = (AmazonSQSClient) AmazonSQSClientBuilder.standard().withCredentials(cp).build();
 		
 		SQSAdapter adapter = new SQSAdapter()
 				.withQueueName("foo")

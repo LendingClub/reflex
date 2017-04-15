@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.lendingclub.reflex.operator.ExceptionHandlers;
 import org.slf4j.Logger;
@@ -34,6 +35,18 @@ import io.reactivex.subjects.Subject;
 public class SQSAdapter {
 
 	static ObjectMapper mapper = new ObjectMapper();
+
+	AtomicReference<Supplier<Boolean>> runStateRef = new AtomicReference<>(new AlwaysRunningSupplier());
+
+	class AlwaysRunningSupplier implements Supplier<Boolean> {
+
+		static final boolean RUNNING=true;
+		@Override
+		public Boolean get() {
+			return RUNNING;
+		}
+
+	}
 
 	public class SQSMessage {
 		Message message;
@@ -333,38 +346,47 @@ public class SQSAdapter {
 
 				running.set(true);
 				while (running.get()) {
+
 					try {
-						ReceiveMessageRequest rmr = new ReceiveMessageRequest();
-						rmr.setWaitTimeSeconds(getWaitTimeSeconds());
-						rmr.setMaxNumberOfMessages(getMessagesPerRequest());
-						if (urlSupplier == null) {
-							throw new IllegalArgumentException("queueUrl or queueName must be set");
-						}
 
-						rmr.setQueueUrl(urlSupplier.get());
-						ReceiveMessageResult result = sqs.receiveMessage(rmr);
-						List<Message> list = result.getMessages();
+						if (isRunning()) {
+							
+							ReceiveMessageRequest rmr = new ReceiveMessageRequest();
+							rmr.setWaitTimeSeconds(getWaitTimeSeconds());
+							rmr.setMaxNumberOfMessages(getMessagesPerRequest());
+							if (urlSupplier == null) {
+								throw new IllegalArgumentException("queueUrl or queueName must be set");
+							}
 
-						if (list != null) {
-							for (Message message : list) {
-								try {
-									messageReceiveCount.incrementAndGet();
-									if (logger.isDebugEnabled()) {
-										logger.debug("received: {}", message.getMessageId());
+							rmr.setQueueUrl(urlSupplier.get());
+							ReceiveMessageResult result = sqs.receiveMessage(rmr);
+							List<Message> list = result.getMessages();
+
+							if (list != null) {
+								for (Message message : list) {
+									try {
+										messageReceiveCount.incrementAndGet();
+										if (logger.isDebugEnabled()) {
+											logger.debug("received: {}", message.getMessageId());
+										}
+										SQSMessage sqs = new SQSMessage();
+										sqs.message = message;
+
+										subject.onNext(sqs);
+										if (autoDelete) {
+											delete(message);
+										}
+										dispatchSuccessCount.incrementAndGet();
+										resetFailureCount();
+									} catch (Exception e) {
+										handleException(e);
 									}
-									SQSMessage sqs = new SQSMessage();
-									sqs.message = message;
-
-									subject.onNext(sqs);
-									if (autoDelete) {
-										delete(message);
-									}
-									dispatchSuccessCount.incrementAndGet();
-									resetFailureCount();
-								} catch (Exception e) {
-									handleException(e);
 								}
 							}
+						}
+						else {
+							logger.info("{} is paused",this);
+							Thread.sleep(10000);
 						}
 
 					} catch (Throwable e) {
@@ -467,5 +489,25 @@ public class SQSAdapter {
 
 	public AtomicLong getTotalSuccessCount() {
 		return dispatchSuccessCount;
+	}
+
+	public void setRunStateSupplier(Supplier<Boolean> supplier) {
+		runStateRef.set(supplier);
+	}
+	
+	public boolean isRunning() {
+		
+		// There are TWO booleans in play.  
+		// 1) "running" determines whether the adapter has been started and not stopped
+		if (running.get()==false) {
+			return false;
+		}
+		
+		// 2) Run state allows the adapter to be paused externally
+		Supplier<Boolean> runStateSupplier = runStateRef.get();
+		if (runStateSupplier == null) {
+			return true;
+		}
+		return runStateSupplier.get();
 	}
 }
