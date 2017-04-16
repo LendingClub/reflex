@@ -134,6 +134,7 @@ uploadArchives {
 task tagRelease {
   description = 'Tags the current head with the project\'s version.'
   doLast {
+    grgit.tag.remove(names: [version])
     grgit.tag.add {
       name = version
       message = "Release of ${version}"
