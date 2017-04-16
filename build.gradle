@@ -1,5 +1,6 @@
 plugins {
     id "com.github.hierynomus.license" version "0.13.1"
+    id 'org.ajoberstar.grgit' version '1.7.1'
 }
 
 apply plugin: 'java'
@@ -128,6 +129,16 @@ uploadArchives {
             }
         }
     }
+}
+
+task tagRelease {
+  description = 'Tags the current head with the project\'s version.'
+  doLast {
+    grgit.tag.add {
+      name = version
+      message = "Release of ${version}"
+    }
+  }
 }
 
 
