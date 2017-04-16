@@ -1,8 +1,13 @@
+plugins {
+    id "com.github.hierynomus.license" version "0.13.1"
+}
+
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven'
 apply plugin: "jacoco"
+apply plugin: "com.github.hierynomus.license"
 
 group 'org.lendingclub'
 version = "1.5.3"
@@ -13,6 +18,10 @@ configurations {
     all*.exclude group: 'commons-logging'
 }
 
+
+
+	
+    
 repositories {
    mavenLocal()
    mavenCentral()
@@ -67,6 +76,11 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
     
     
+}
+
+license {
+    header rootProject.file('LICENSE')
+    strictCheck true
 }
 
 artifacts {
